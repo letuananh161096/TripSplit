@@ -1,0 +1,354 @@
+[
+  {
+    "id": "trip_vungtau2026",
+    "code": "VUNGTAU26",
+    "name": "Chuyến Đi Vũng Tàu",
+    "hostId": "usr_admin",
+    "members": [
+      {
+        "id": "m_1",
+        "userId": "usr_admin",
+        "name": "Hương, T.Anh",
+        "phone": "0900000000",
+        "bankCode": "MOMO",
+        "accountNo": "0900000000",
+        "accountName": "HUONG VA TUAN ANH",
+        "role": "host",
+        "colorIdx": 0
+      },
+      {
+        "id": "m_2",
+        "userId": "usr_son",
+        "name": "Sơn",
+        "phone": "0787574001",
+        "bankCode": "MOMO",
+        "accountNo": "0787574001",
+        "accountName": "KIM HUONG",
+        "role": "member",
+        "colorIdx": 1,
+        "momoLink": "https://me.momo.vn/J5CGu7Cot8TEUAsk"
+      },
+      {
+        "id": "m_3",
+        "userId": "usr_tan",
+        "name": "Tấn",
+        "phone": "0933444555",
+        "bankCode": "MOMO",
+        "accountNo": "0933444555",
+        "accountName": "TRAN TAN",
+        "role": "member",
+        "colorIdx": 2
+      }
+    ],
+    "pendingMembers": [],
+    "expenses": [
+      {
+        "id": "exp_1",
+        "title": "Đi nhậu",
+        "amount": 870000,
+        "category": "food",
+        "payerId": "m_2",
+        "splitType": "shares",
+        "splits": [
+          {
+            "memberId": "m_1",
+            "isIncluded": true,
+            "shares": 2,
+            "amount": 435000
+          },
+          {
+            "memberId": "m_2",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 217500
+          },
+          {
+            "memberId": "m_3",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 217500
+          }
+        ],
+        "date": "2026-09-07T08:00:00.000Z",
+        "receipt": null
+      },
+      {
+        "id": "exp_2",
+        "title": "Khách sạn",
+        "amount": 800000,
+        "category": "hotel",
+        "payerId": "m_3",
+        "splitType": "shares",
+        "splits": [
+          {
+            "memberId": "m_1",
+            "isIncluded": true,
+            "shares": 2,
+            "amount": 400000
+          },
+          {
+            "memberId": "m_2",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 200000
+          },
+          {
+            "memberId": "m_3",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 200000
+          }
+        ],
+        "date": "2026-09-07T09:00:00.000Z",
+        "receipt": null
+      },
+      {
+        "id": "exp_3",
+        "title": "Cf bên vũng tàu",
+        "amount": 267000,
+        "category": "drink",
+        "payerId": "m_1",
+        "splitType": "shares",
+        "splits": [
+          {
+            "memberId": "m_1",
+            "isIncluded": true,
+            "shares": 2,
+            "amount": 133500
+          },
+          {
+            "memberId": "m_2",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 66750
+          },
+          {
+            "memberId": "m_3",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 66750
+          }
+        ],
+        "date": "2026-09-07T10:00:00.000Z",
+        "receipt": null
+      },
+      {
+        "id": "exp_4",
+        "title": "Vòng tròn K",
+        "amount": 160000,
+        "category": "shopping",
+        "payerId": "m_1",
+        "splitType": "shares",
+        "splits": [
+          {
+            "memberId": "m_1",
+            "isIncluded": true,
+            "shares": 2,
+            "amount": 80000
+          },
+          {
+            "memberId": "m_2",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 40000
+          },
+          {
+            "memberId": "m_3",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 40000
+          }
+        ],
+        "date": "2026-09-07T11:00:00.000Z",
+        "receipt": null
+      },
+      {
+        "id": "exp_5",
+        "title": "Bánh canh",
+        "amount": 260000,
+        "category": "food",
+        "payerId": "m_1",
+        "splitType": "shares",
+        "splits": [
+          {
+            "memberId": "m_1",
+            "isIncluded": true,
+            "shares": 2,
+            "amount": 130000
+          },
+          {
+            "memberId": "m_2",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 65000
+          },
+          {
+            "memberId": "m_3",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 65000
+          }
+        ],
+        "date": "2026-09-07T12:00:00.000Z",
+        "receipt": null
+      },
+      {
+        "id": "exp_6",
+        "title": "Hải sản",
+        "amount": 350000,
+        "category": "food",
+        "payerId": "m_1",
+        "splitType": "shares",
+        "splits": [
+          {
+            "memberId": "m_1",
+            "isIncluded": true,
+            "shares": 2,
+            "amount": 233333
+          },
+          {
+            "memberId": "m_2",
+            "isIncluded": false,
+            "shares": 1,
+            "amount": 0
+          },
+          {
+            "memberId": "m_3",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 116667
+          }
+        ],
+        "date": "2026-09-07T13:00:00.000Z",
+        "receipt": null
+      },
+      {
+        "id": "exp_7",
+        "title": "Nước chấm, nước dừa, cơm ...",
+        "amount": 260000,
+        "category": "food",
+        "payerId": "m_1",
+        "splitType": "shares",
+        "splits": [
+          {
+            "memberId": "m_1",
+            "isIncluded": true,
+            "shares": 2,
+            "amount": 173333
+          },
+          {
+            "memberId": "m_2",
+            "isIncluded": false,
+            "shares": 1,
+            "amount": 0
+          },
+          {
+            "memberId": "m_3",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 86667
+          }
+        ],
+        "date": "2026-09-07T14:00:00.000Z",
+        "receipt": null
+      },
+      {
+        "id": "exp_8",
+        "title": "Cá viên",
+        "amount": 200000,
+        "category": "food",
+        "payerId": "m_3",
+        "splitType": "shares",
+        "splits": [
+          {
+            "memberId": "m_1",
+            "isIncluded": true,
+            "shares": 2,
+            "amount": 100000
+          },
+          {
+            "memberId": "m_2",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 50000
+          },
+          {
+            "memberId": "m_3",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 50000
+          }
+        ],
+        "date": "2026-09-07T15:00:00.000Z",
+        "receipt": null
+      },
+      {
+        "id": "exp_9",
+        "title": "Cafe bên",
+        "amount": 110000,
+        "category": "drink",
+        "payerId": "m_1",
+        "splitType": "exact",
+        "splits": [
+          {
+            "memberId": "m_1",
+            "isIncluded": true,
+            "shares": 2,
+            "amount": 73334
+          },
+          {
+            "memberId": "m_2",
+            "isIncluded": false,
+            "shares": 1,
+            "amount": 0
+          },
+          {
+            "memberId": "m_3",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 36666
+          }
+        ],
+        "date": "2026-09-07T16:00:00.000Z",
+        "receipt": null
+      },
+      {
+        "id": "exp_10",
+        "title": "Phà",
+        "amount": 430000,
+        "category": "transport",
+        "payerId": "m_1",
+        "splitType": "exact",
+        "splits": [
+          {
+            "memberId": "m_1",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 190000
+          },
+          {
+            "memberId": "m_2",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 120000
+          },
+          {
+            "memberId": "m_3",
+            "isIncluded": true,
+            "shares": 1,
+            "amount": 120000
+          }
+        ],
+        "date": "2026-09-07T17:00:00.000Z",
+        "receipt": null
+      }
+    ],
+    "settlements": [],
+    "fund": {
+      "enabled": false,
+      "treasurerId": null,
+      "contributions": []
+    },
+    "createdAt": "2026-09-07T07:00:00.000Z"
+  }
+]
