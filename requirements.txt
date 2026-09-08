@@ -1,0 +1,2 @@
+# TripSplit Python Requirements
+# server.py uses Python standard library only (http.server, socketserver, socket, sys, os, json)

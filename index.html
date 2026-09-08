@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>TripSplit - Sổ Chi Tiêu Du Lịch Nhóm & Quyết Toán VietQR</title>
+  <meta name="description"
+    content="Ứng dụng quản lý chi tiêu khi team đi du lịch, tối ưu nợ và chuyển khoản nhanh qua mã VietQR trên Android và iOS.">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TripSplit">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="icons/icon-512.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css?v=1.7.2">
+</head>
+
+<body>
+
+  <!-- ================= AUTHENTICATION WALL (LOGIN GATE) ================= -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="auth-logo-box">
+          <img src="icons/icon-192.png" alt="TripSplit Logo" class="auth-logo-img">
+        </div>
+        <h1 class="auth-title">TripSplit</h1>
+        <p class="auth-subtitle">Sổ Chi Tiêu Nhóm & Quyết Toán VietQR</p>
+      </div>
+
+      <div class="auth-security-notice">
+        <span class="auth-lock-icon">🔒</span>
+        <span>Hệ thống nội bộ. Vui lòng đăng nhập bằng tài khoản được cấp quyền.</span>
+      </div>
+
+      <div id="login-error-msg" class="auth-error-alert" style="display: none;"></div>
+
+      <!-- Tài khoản gần nhất (Yêu cầu nhập mật khẩu) -->
+      <div class="auth-last-user-card" id="auth-last-user-section" style="display: none;">
+        <div class="auth-last-user-label">
+          <span>⚡ Tài khoản đăng nhập gần nhất:</span>
+        </div>
+        <button type="button" class="last-user-quick-btn" id="btn-quick-login-last" title="Bấm để chọn tài khoản này">
+          <div class="last-user-avatar" id="last-user-avatar">👤</div>
+          <div class="last-user-info">
+            <div class="last-user-name" id="last-user-name">Người dùng</div>
+            <div class="last-user-meta" id="last-user-meta">@username</div>
+          </div>
+          <div class="last-user-action">
+            <span>Chọn</span>
+            <span class="last-user-arrow">➔</span>
+          </div>
+        </button>
+      </div>
+
+      <div class="auth-divider" id="auth-divider-line" style="display: none;">
+        <span>Hoặc đăng nhập tài khoản khác</span>
+      </div>
+
+      <form id="form-login" class="auth-form" autocomplete="on">
+        <div class="form-group">
+          <label class="form-label" for="login-username">Tên đăng nhập / Số điện thoại</label>
+          <div class="auth-input-wrapper">
+            <span class="auth-input-icon">👤</span>
+            <input type="text" class="form-input auth-input" id="login-username" placeholder="Nhập username hoặc SĐT"
+              required autofocus autocomplete="username">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-password">Mật khẩu truy cập</label>
+          <div class="auth-input-wrapper">
+            <span class="auth-input-icon">🔑</span>
+            <input type="password" class="form-input auth-input" id="login-password" placeholder="Nhập mật khẩu"
+              required autocomplete="current-password">
+            <button type="button" class="auth-pwd-toggle" id="btn-toggle-pwd" title="Hiện/ẩn mật khẩu">👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn auth-submit-btn" id="btn-login-submit">
+          <span>Đăng Nhập Vào Hệ Thống</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </button>
+      </form>
+
+      <div class="auth-footer-help">
+        <p>Chưa có tài khoản truy cập?</p>
+        <p class="auth-contact-hint">Vui lòng liên hệ <strong>Trưởng nhóm / Quản trị viên</strong> để được cấp tài khoản
+          và mật khẩu.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Mobile Container -->
+  <div id="app-container" style="display: none;">
+
+    <!-- Top App Bar -->
+    <header class="app-header">
+      <div class="brand-area">
+        <div class="brand-logo" id="btn-logo" title="TripSplit">
+          <img src="icons/icon-192.png" alt="TripSplit Logo" class="brand-logo-img">
+        </div>
+        <div class="brand-info">
+          <h1>TripSplit</h1>
+          <button class="trip-badge-btn" id="btn-switch-trip" title="Đổi chuyến đi">
+            <span id="header-trip-name">Chuyến đi Đà Lạt</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="icon-btn" id="btn-share-trip" title="Mời bạn bè vào phòng">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+          </svg>
+        </button>
+        <!-- Nút Quản Lý Tài Khoản (Dành riêng cho Admin) -->
+        <button class="icon-btn admin-header-btn" id="btn-header-admin-users" title="Quản trị người dùng hệ thống (Admin)" style="display: none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span style="position: absolute; top: -3px; right: -3px; font-size: 10px; line-height: 1;">👑</span>
+        </button>
+        <button class="icon-btn profile-btn" id="btn-open-user-profile" title="Tài khoản cá nhân của bạn">
+          <span id="header-user-avatar" class="header-user-avatar">👤</span>
+        </button>
+        <div class="sync-status-dot" id="sync-dot" title="Trạng thái đồng bộ"></div>
+      </div>
+    </header>
+
+    <!-- Pending Approvals Banner (Cho Trưởng nhóm khi có người xin vào phòng) -->
+    <div class="pending-approvals-banner" id="banner-pending-approvals" style="display: none;">
+      <div class="pending-banner-text">
+        <span>🔔 Có <strong id="pending-count-num">1</strong> người xin tham gia chuyến đi</span>
+      </div>
+      <button class="pending-banner-btn" id="btn-open-approvals-modal">Duyệt ngay</button>
+    </div>
+
+    <!-- PWA Install Banner -->
+    <div class="pwa-banner" id="pwa-banner" style="display: none;">
+      <span>📱 Cài đặt TripSplit vào màn hình chính Android để mở nhanh hơn!</span>
+      <button class="pwa-banner-btn" id="btn-install-pwa">Cài đặt</button>
+    </div>
+
+    <!-- App Content & Views -->
+    <main class="app-content">
+
+      <!-- Màn hình trạng thái trống khi không có chuyến đi nào -->
+      <div id="view-no-trips" class="no-trips-container" style="display: none;">
+        <div class="no-trips-card">
+          <div class="no-trips-icon">🏖️</div>
+          <h2>Chưa có chuyến đi nào</h2>
+          <p>Hiện bạn chưa có chuyến đi nào trong danh sách. Hãy tạo chuyến đi mới để bắt đầu quản lý chi tiêu cho team
+            hoặc tham gia bằng mã phòng từ bạn bè!</p>
+          <div class="no-trips-actions" style="width: 100%; max-width: 320px; margin: 0 auto;">
+            <button class="submit-btn" id="btn-empty-start-trip"
+              style="width: 100%; padding: 14px 20px; font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.35);">
+              <span>✨ Bắt Đầu Chuyến Đi</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 1: TỔNG QUAN (OVERVIEW) ================= -->
+      <section class="tab-view active" id="tab-overview">
+        <!-- Hero Stats Card -->
+        <div class="hero-card">
+          <div class="hero-header">
+            <div class="hero-trip-name" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span id="hero-display-name">Du Lịch Đà Lạt</span>
+              <button class="icon-btn" id="btn-edit-trip-name" title="Đổi tên chuyến đi này"
+                style="width: 26px; height: 26px; border: none; background: rgba(255,255,255,0.08); padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+              </button>
+              <span class="room-chip" id="btn-copy-code" title="Bấm để sao chép mã phòng">#<span
+                  id="hero-room-code">DALAT26</span></span>
+            </div>
+            <button class="trip-badge-btn" id="btn-export-quick">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Xuất
+            </button>
+          </div>
+
+          <div class="hero-total-label">Tổng chi phí cả team</div>
+          <div class="hero-total-amount">
+            <span id="hero-total-val">0</span>
+            <span class="currency">VND</span>
+          </div>
+
+          <div class="hero-grid">
+            <div class="hero-sub-metric">
+              <span class="label">Bình quân / người</span>
+              <span class="val highlight-green" id="hero-avg-val">0 đ</span>
+            </div>
+            <div class="hero-sub-metric">
+              <span class="label">Số khoản đã chi</span>
+              <span class="val highlight-blue" id="hero-count-val">0 khoản</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group Fund (Quỹ Nhóm & Thủ Quỹ) Widget Card -->
+        <div class="fund-card" id="fund-card">
+          <div class="fund-header">
+            <div class="fund-title-area">
+              <span class="fund-badge-icon">🏦</span>
+              <div>
+                <div class="fund-title">Quỹ Nhóm (Thủ Quỹ)</div>
+                <div class="fund-subtitle">
+                  Thủ quỹ: <strong id="fund-treasurer-name">--</strong>
+                </div>
+              </div>
+            </div>
+            <button class="trip-badge-btn" id="btn-open-fund-modal"
+              style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.35);">
+              💰 Góp quỹ
+            </button>
+          </div>
+
+          <div class="fund-balance-row">
+            <div class="fund-balance-info">
+              <div class="fund-label">Số dư quỹ còn lại</div>
+              <div class="fund-amount" id="fund-remaining-amount">0 đ</div>
+            </div>
+            <div class="fund-status-chip" id="fund-status-chip">Đang dùng quỹ</div>
+          </div>
+
+          <div class="fund-progress-track">
+            <div class="fund-progress-bar" id="fund-progress-bar" style="width: 100%;"></div>
+          </div>
+
+          <div class="fund-stats-footer">
+            <span>Đã gom quỹ: <strong id="fund-total-collected">0 đ</strong></span>
+            <span>Đã chi từ quỹ: <strong id="fund-total-spent">0 đ</strong></span>
+          </div>
+        </div>
+
+        <!-- Quick Action Shortcuts (Phím tắt nhanh Fintech) -->
+        <div class="quick-shortcuts-card">
+          <button type="button" class="quick-shortcut-btn" id="btn-quick-add-expense">
+            <div class="shortcut-icon-box emerald">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </div>
+            <span class="shortcut-title">Thêm chi</span>
+          </button>
+
+          <button type="button" class="quick-shortcut-btn" id="btn-quick-fund">
+            <div class="shortcut-icon-box amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <rect width="20" height="12" x="2" y="6" rx="2" />
+                <circle cx="12" cy="12" r="2" />
+                <path d="M6 12h.01M18 12h.01" />
+              </svg>
+            </div>
+            <span class="shortcut-title" id="quick-fund-label">Quỹ nhóm</span>
+          </button>
+
+          <button type="button" class="quick-shortcut-btn" id="btn-quick-settle">
+            <div class="shortcut-icon-box purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <rect width="20" height="14" x="2" y="5" rx="2" />
+                <line x1="2" x2="22" y1="10" y2="10" />
+              </svg>
+            </div>
+            <span class="shortcut-title">Quyết toán</span>
+          </button>
+        </div>
+
+        <!-- Recent Expenses Card (Chi tiêu gần đây) -->
+        <div class="recent-expenses-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div
+              style="font-weight: 700; color: #fff; font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">
+              <span>⏱️ Chi tiêu gần đây</span>
+            </div>
+            <button id="btn-see-all-expenses"
+              style="background: none; border: none; color: #38bdf8; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+              Xem tất cả ➔
+            </button>
+          </div>
+
+          <div id="recent-expenses-preview" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Rendered via JS -->
+          </div>
+
+          <button class="submit-btn" id="btn-goto-expenses-tab"
+            style="margin-top: 14px; padding: 10px; font-size: 0.85rem; background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: none;">
+            🧾 Mở Toàn Bộ Danh Sách Chi Tiêu ➔
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: DANH SÁCH CHI TIÊU (DEDICATED EXPENSES LIST) ================= -->
+      <section class="tab-view" id="tab-expenses">
+        <!-- Expense Header & Search Bar -->
+        <div class="section-header" style="margin-bottom: 12px;">
+          <div class="section-title">
+            <span>Danh sách chi tiêu</span>
+            <span class="count-badge" id="expense-count-badge">0</span>
+          </div>
+          <button class="trip-badge-btn" id="btn-tab-add-expense"
+            style="background: linear-gradient(135deg, var(--primary) 0%, #047857 100%); color: #fff; border: none; font-weight: 700;">
+            Thêm khoản chi
+          </button>
+        </div>
+
+        <!-- Ô Tìm Kiếm Khoản Chi -->
+        <div class="expense-search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="expense-search-input" class="form-input" placeholder="Tìm theo tên món, người chi...">
+        </div>
+
+        <!-- Category Horizontal Filter Scroll -->
+        <div class="category-filter-scroll" id="cat-filter-bar">
+          <button class="filter-chip active" data-cat="all">Tất cả</button>
+          <button class="filter-chip" data-cat="food">🍽️ Ăn uống</button>
+          <button class="filter-chip" data-cat="transport">🚗 Di chuyển</button>
+          <button class="filter-chip" data-cat="hotel">🏨 Khách sạn</button>
+          <button class="filter-chip" data-cat="ticket">🎟️ Vé & Tour</button>
+          <button class="filter-chip" data-cat="drink">☕ Cafe & Bar</button>
+          <button class="filter-chip" data-cat="shopping">🛍️ Mua sắm</button>
+          <button class="filter-chip" data-cat="other">💡 Khác</button>
+        </div>
+
+        <!-- Date Horizontal Filter Bar -->
+        <div class="date-filter-bar" id="date-filter-bar">
+          <button type="button" class="date-filter-chip active" data-date="all">📅 Tất cả ngày</button>
+          <button type="button" class="date-filter-chip" data-date="today">Hôm nay</button>
+          <button type="button" class="date-filter-chip" data-date="yesterday">Hôm qua</button>
+          <div class="custom-date-filter-wrapper">
+            <label for="expense-date-filter-picker" class="custom-date-label" title="Lọc theo ngày cụ thể">
+              <span>Chọn ngày:</span>
+              <input type="date" id="expense-date-filter-picker" class="custom-date-input">
+            </label>
+            <button type="button" id="btn-clear-date-filter" class="btn-clear-date" title="Xóa lọc ngày" style="display: none;">✕</button>
+          </div>
+        </div>
+
+        <!-- Expense List Container -->
+        <div class="expense-list" id="expense-list-container">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: THÀNH VIÊN (MEMBERS) ================= -->
+      <section class="tab-view" id="tab-members">
+        <div class="section-header">
+          <div class="section-title">
+            <span>Thành viên chuyến đi</span>
+            <span class="count-badge" id="member-count-badge">0</span>
+          </div>
+        </div>
+
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;">
+          Cập nhật thông tin ngân hàng của mỗi người để ứng dụng tự động sinh mã VietQR khi quyết toán.
+        </p>
+
+        <!-- Danh sách yêu cầu chờ duyệt (Chỉ hiển thị cho Trưởng nhóm) -->
+        <div id="pending-members-section"
+          style="display: none; background: rgba(245, 158, 11, 0.05); border: 1px dashed rgba(245, 158, 11, 0.4); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 16px;">
+          <div class="section-title" style="color: #f59e0b; margin-bottom: 10px; font-size: 0.9rem;">
+            <span>⏳ Yêu cầu xin vào phòng</span>
+            <span class="count-badge" id="tab-pending-count"
+              style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">0</span>
+          </div>
+          <div id="pending-members-list" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <div class="members-list" id="members-list-container">
+          <!-- Rendered via JS -->
+        </div>
+
+        <!-- Nút Rời Chuyến Đi -->
+        <div style="margin-top: 24px; text-align: center;">
+          <button class="submit-btn" id="btn-leave-trip"
+            style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; box-shadow: none; font-size: 0.85rem; padding: 10px; width: 100%;">
+            🚪 Rời Khỏi Chuyến Đi Này
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: QUYẾT TOÁN VIETQR (SETTLEMENT) ================= -->
+      <section class="tab-view" id="tab-settlement">
+        <div class="section-header">
+          <div class="section-title">
+            <span>Quyết toán nợ tối ưu</span>
+          </div>
+        </div>
+
+        <div
+          style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--border-highlight); border-radius: var(--radius-md); padding: 12px; margin-bottom: 16px; font-size: 0.8rem; color: #a7f3d0;">
+          💡 <strong>Thuật toán tối ưu nợ:</strong> Tự động gom và bù trừ nợ chéo, giúp cả nhóm thanh toán dứt điểm với
+          số lần chuyển tiền ít nhất!
+        </div>
+
+        <div id="settlement-list-container">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: BÁO CÁO & XUẤT (ANALYTICS) ================= -->
+      <section class="tab-view" id="tab-analytics">
+        <div class="section-header">
+          <div class="section-title">
+            <span>Báo cáo & Phân tích chi tiêu</span>
+          </div>
+        </div>
+
+        <div class="analytics-section">
+          <!-- Category Spending Breakdown Card -->
+          <div class="hero-card" style="margin-bottom: 0;">
+            <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; color: var(--text-main);">
+              Phân bổ theo danh mục
+            </h3>
+            <div id="category-analytics-bars" style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Export Action Buttons -->
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
+            <button class="submit-btn" id="btn-export-summary-card"
+              style="background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #ffffff;">
+              🖼️ Tạo Ảnh Tóm Tắt Gửi Nhóm Zalo / Telegram
+            </button>
+            <button class="submit-btn" id="btn-export-excel"
+              style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; font-weight: 700; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25);">
+              📊 Xuất Báo Cáo Excel (.XLS - Kẻ Bảng &amp; Bôi Đen Tiêu Đề)
+            </button>
+            <button class="trip-badge-btn" id="btn-export-csv"
+              style="align-self: center; font-size: 0.78rem; opacity: 0.8; margin-top: -2px;">
+              📄 Tải File .CSV (Dữ Liệu Thuần)
+            </button>
+            <button class="submit-btn" id="btn-delete-current-trip"
+              style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; box-shadow: none;">
+              🗑️ Xóa Chuyến Đi Này
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar (5 Chuyên Mục) -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-tab="tab-overview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+        <span>Tổng quan</span>
+      </button>
+
+      <button class="nav-item" data-tab="tab-expenses">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+          <polyline points="10 9 9 9 8 9" />
+        </svg>
+        <span>Chi tiêu</span>
+      </button>
+
+      <button class="nav-item" data-tab="tab-members">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+        <span>Thành viên</span>
+      </button>
+
+      <button class="nav-item" data-tab="tab-settlement">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect width="20" height="14" x="2" y="5" rx="2" />
+          <line x1="2" x2="22" y1="10" y2="10" />
+          <path d="m16 15 2-2-2-2" />
+        </svg>
+        <span>Quyết toán</span>
+      </button>
+
+      <button class="nav-item" data-tab="tab-analytics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+        <span>Báo cáo</span>
+      </button>
+    </nav>
+
+
+    <!-- ================= MODALS & BOTTOM SHEETS ================= -->
+
+    <!-- 1. Add Expense Bottom Sheet Modal -->
+    <div class="modal-overlay" id="modal-add-expense">
+      <div class="bottom-sheet">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title" id="expense-modal-title">Thêm khoản chi mới</h2>
+          <button class="sheet-close-btn" data-close-modal="modal-add-expense">&times;</button>
+        </div>
+
+        <form id="form-expense">
+          <input type="hidden" id="edit-expense-id" value="">
+
+          <!-- Số tiền lớn -->
+          <div class="amount-input-box">
+            <input type="number" id="expense-amount" placeholder="0" required min="1000" step="1000">
+            <span class="currency-suffix">VND</span>
+          </div>
+
+          <!-- Quick Amount Buttons -->
+          <div class="quick-amount-pills">
+            <button type="button" class="quick-pill" data-add="50000">+50k</button>
+            <button type="button" class="quick-pill" data-add="100000">+100k</button>
+            <button type="button" class="quick-pill" data-add="200000">+200k</button>
+            <button type="button" class="quick-pill" data-add="500000">+500k</button>
+            <button type="button" class="quick-pill" data-add="1000000">+1tr</button>
+          </div>
+
+          <!-- Nội dung chi -->
+          <div class="form-group">
+            <label class="form-label" for="expense-title">Nội dung chi</label>
+            <input type="text" class="form-input" id="expense-title"
+              placeholder="VD: Bữa trưa hải sản, Taxi ra sân bay..." required>
+          </div>
+
+          <!-- Ngày chi tiêu -->
+          <div class="form-group">
+            <label class="form-label" for="expense-date">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span>Ngày chi tiêu</span>
+              </span>
+            </label>
+            <input type="date" class="form-input" id="expense-date" required>
+          </div>
+
+          <!-- Danh mục -->
+          <div class="form-group">
+            <label class="form-label">Danh mục chi tiêu</label>
+            <div class="category-grid" id="category-selector">
+              <div class="cat-item active" data-val="food">
+                <span class="cat-icon">🍽️</span>
+                <span class="cat-name">Ăn uống</span>
+              </div>
+              <div class="cat-item" data-val="transport">
+                <span class="cat-icon">🚗</span>
+                <span class="cat-name">Di chuyển</span>
+              </div>
+              <div class="cat-item" data-val="hotel">
+                <span class="cat-icon">🏨</span>
+                <span class="cat-name">Khách sạn</span>
+              </div>
+              <div class="cat-item" data-val="ticket">
+                <span class="cat-icon">🎟️</span>
+                <span class="cat-name">Vé/Tour</span>
+              </div>
+              <div class="cat-item" data-val="drink">
+                <span class="cat-icon">☕</span>
+                <span class="cat-name">Cafe & Bar</span>
+              </div>
+              <div class="cat-item" data-val="shopping">
+                <span class="cat-icon">🛍️</span>
+                <span class="cat-name">Mua sắm</span>
+              </div>
+              <div class="cat-item" data-val="entertainment">
+                <span class="cat-icon">🎪</span>
+                <span class="cat-name">Giải trí</span>
+              </div>
+              <div class="cat-item" data-val="other">
+                <span class="cat-icon">💡</span>
+                <span class="cat-name">Khác</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Người chi trả -->
+          <div class="form-group">
+            <label class="form-label" for="expense-payer">Ai là người thanh toán?</label>
+            <select class="form-select" id="expense-payer" required>
+              <!-- Populated via JS -->
+            </select>
+          </div>
+
+          <!-- Kiểu chia tiền -->
+          <div class="form-group">
+            <label class="form-label">Cách chia tiền cho các thành viên</label>
+            <div class="segmented-control" id="split-type-segments">
+              <button type="button" class="segment-btn active" data-type="equal">Chia đều</button>
+              <button type="button" class="segment-btn" data-type="shares">Theo suất</button>
+              <button type="button" class="segment-btn" data-type="exact">Số tiền</button>
+            </div>
+
+            <!-- Danh sách thành viên kèm checkbox/input chia -->
+            <div class="split-members-list" id="split-members-container">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Đính kèm ảnh hóa đơn -->
+          <div class="form-group">
+            <label class="form-label">Ảnh hóa đơn / Biên lai (tùy chọn)</label>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="expense-receipt-file"
+                style="cursor: pointer; background: rgba(255,255,255,0.06); border: 1px dashed var(--border-glass); border-radius: var(--radius-md); padding: 10px 14px; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect width="18" height="18" x="3" y="3" rx="2" />
+                  <circle cx="9" cy="9" r="2" />
+                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                </svg>
+                <span>Chụp / Tải ảnh bill</span>
+              </label>
+              <input type="file" id="expense-receipt-file" accept="image/*" style="display: none;">
+              <div id="receipt-preview-thumb" style="display: none; position: relative;">
+                <img id="receipt-preview-img" src="" alt="Receipt"
+                  style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-highlight);">
+                <button type="button" id="btn-remove-receipt"
+                  style="position: absolute; top: -6px; right: -6px; background: #ef4444; border: none; color: #fff; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; font-size: 10px;">&times;</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="submit-btn" id="btn-save-expense" style="margin-top: 0; flex: 2;">Lưu khoản
+              chi</button>
+            <button type="button" class="submit-btn" id="btn-delete-expense"
+              style="margin-top: 0; flex: 1; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; box-shadow: none; display: none;">Xóa</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 2. Member Edit Modal -->
+    <div class="modal-overlay" id="modal-member">
+      <div class="bottom-sheet">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title" id="member-modal-title">Thêm thành viên</h2>
+          <button class="sheet-close-btn" data-close-modal="modal-member">&times;</button>
+        </div>
+
+        <form id="form-member">
+          <input type="hidden" id="edit-member-id" value="">
+          <div class="form-group">
+            <label class="form-label" for="member-name-input">Tên thành viên</label>
+            <input type="text" class="form-input" id="member-name-input" placeholder="VD: Hùng, Linh, Tuấn..." required>
+          </div>
+
+          <input type="hidden" id="member-bank-select" value="MOMO">
+          <div class="form-group">
+            <label class="form-label" for="member-acc-input" style="color: #f472b6; font-weight: 700;">📱 Số điện thoại Ví MoMo nhận tiền</label>
+            <input type="tel" class="form-input" id="member-acc-input" placeholder="VD: 0912345678" style="border-color: rgba(216, 45, 139, 0.4);">
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">SĐT đăng ký Ví MoMo để bạn bè quét mã hoặc chuyển tiền quyết toán.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="member-acc-name">Tên chủ Ví MoMo (viết hoa không dấu)</label>
+            <input type="text" class="form-input" id="member-acc-name" placeholder="VD: NGUYEN VAN A" style="text-transform: uppercase;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="member-momo-link" style="color: #f472b6;">🔗 Link nhận tiền MoMo cá nhân (Tùy chọn)</label>
+            <input type="text" class="form-input" id="member-momo-link" placeholder="VD: https://me.momo.vn/0912345678" style="border-color: rgba(216, 45, 139, 0.4);">
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Link me.momo.vn để khi bấm "Mở App" sẽ tự động vào thẳng màn hình chuyển tiền MoMo.</div>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="submit-btn" id="btn-save-member" style="margin-top: 0; flex: 2;">Lưu thành
+              viên</button>
+            <button type="button" class="submit-btn" id="btn-delete-member"
+              style="margin-top: 0; flex: 1; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; box-shadow: none; display: none;">Xóa</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 3. Trip Switcher / Room Modal -->
+    <div class="modal-overlay" id="modal-trip-switcher">
+      <div class="bottom-sheet">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">Chuyến Đi & Đồng Bộ Nhóm</h2>
+          <button class="sheet-close-btn" data-close-modal="modal-trip-switcher">&times;</button>
+        </div>
+
+        <!-- Tham gia bằng mã phòng -->
+        <div
+          style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px;">
+          <h3 style="font-size: 0.9rem; margin-bottom: 8px;">🔗 Tham gia chuyến đi của bạn bè</h3>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" class="form-input" id="input-join-room" placeholder="Nhập mã phòng (VD: DALAT26)"
+              style="text-transform: uppercase;">
+            <button class="submit-btn" id="btn-submit-join"
+              style="width: auto; padding: 10px 16px; margin-top: 0;">Vào</button>
+            <button type="button" class="icon-btn" id="btn-open-scanner-from-switcher" title="Quét mã QR bằng Camera"
+              style="width: 44px; height: 44px; border-radius: var(--radius-md); background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tạo chuyến đi mới -->
+        <div
+          style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px;">
+          <h3 style="font-size: 0.9rem; margin-bottom: 8px;">✨ Tạo chuyến đi mới</h3>
+          <input type="text" class="form-input" id="input-new-trip-name"
+            placeholder="Tên chuyến đi (VD: Phú Quốc hè 2026)" style="margin-bottom: 10px;">
+          <button class="submit-btn" id="btn-submit-create-trip" style="margin-top: 0;">Tạo chuyến đi</button>
+        </div>
+
+        <!-- Danh sách chuyến đi gần đây -->
+        <div class="section-title" style="margin-bottom: 8px;">Chuyến đi đã lưu trên máy</div>
+        <div id="recent-trips-list" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 3.0 Modal Bắt Đầu Chuyến Đi (Gồm 2 Lựa Chọn Sau Khi Bấm 1 Dòng Duy Nhất) -->
+    <div class="modal-overlay" id="modal-start-trip">
+      <div class="bottom-sheet" style="max-height: 92vh; overflow-y: auto;">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">Bắt Đầu Chuyến Đi</h2>
+          <button class="sheet-close-btn" data-close-modal="modal-start-trip">&times;</button>
+        </div>
+
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 14px; text-align: center;">
+          Vui lòng chọn một trong hai cách bên dưới để bắt đầu:
+        </p>
+
+        <!-- LỰA CHỌN 1: THAM GIA CHUYẾN ĐI CỦA BẠN BÈ -->
+        <div class="start-flow-card">
+          <div class="flow-card-header">
+            <div class="flow-icon-badge blue">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </div>
+            <div class="flow-text-group">
+              <h3>1. Tham Gia Chuyến Đi</h3>
+              <p>Quét mã QR hoặc nhập mã phòng từ Trưởng nhóm</p>
+            </div>
+          </div>
+
+          <div class="flow-actions-box">
+            <!-- Nút bật camera chụp trực tiếp & nút tải file -->
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+              <button type="button" class="btn-scan-qr-direct" id="btn-start-camera-capture">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>📸 Mở Camera Quét QR</span>
+              </button>
+              <button type="button" class="btn-upload-qr-file" id="btn-start-file-pick" title="Chọn ảnh mã QR có sẵn trong máy">
+                📁 Tải ảnh
+              </button>
+              <!-- Hidden native camera input (hoạt động 100% trên mọi điện thoại iOS/Android qua HTTP & HTTPS) -->
+              <input type="file" id="input-native-camera-capture" accept="image/*" capture="environment" style="display: none;">
+              <input type="file" id="input-gallery-file-pick" accept="image/*" style="display: none;">
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <input type="text" class="form-input" id="input-start-join-code" placeholder="Mã phòng (VD: DALAT26 hoặc TRIP5100)"
+                style="font-weight: 700; letter-spacing: 1px;">
+              <button class="submit-btn" id="btn-submit-start-join"
+                style="width: auto; padding: 10px 18px; margin-top: 0; white-space: nowrap;">Vào</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LỰA CHỌN 2: TẠO CHUYẾN ĐI MỚI -->
+        <div class="start-flow-card">
+          <div class="flow-card-header">
+            <div class="flow-icon-badge emerald">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+            <div class="flow-text-group">
+              <h3>2. Tạo Chuyến Đi Mới</h3>
+              <p>Tạo phòng mới và trở thành Trưởng nhóm quản lý</p>
+            </div>
+          </div>
+
+          <div class="flow-actions-box">
+            <div style="display: flex; gap: 8px;">
+              <input type="text" class="form-input" id="input-start-new-trip" placeholder="Tên chuyến đi (VD: Phú Quốc hè 2026)">
+              <button class="submit-btn" id="btn-submit-start-create"
+                style="width: auto; padding: 10px 18px; margin-top: 0; white-space: nowrap; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">Tạo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3.1 Dedicated Join Trip & QR Camera Scanner Modal -->
+    <div class="modal-overlay" id="modal-join-room">
+      <div class="bottom-sheet" style="max-height: 92vh; overflow-y: auto;">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">Tham Gia Chuyến Đi</h2>
+          <button class="sheet-close-btn" data-close-modal="modal-join-room">&times;</button>
+        </div>
+
+        <div class="qr-scanner-card">
+          <div class="scanner-viewfinder" id="scanner-viewfinder">
+            <div id="qr-reader-view"></div>
+            <div class="scanner-frame">
+              <div class="scanner-corner tl"></div>
+              <div class="scanner-corner tr"></div>
+              <div class="scanner-corner bl"></div>
+              <div class="scanner-corner br"></div>
+            </div>
+            <div class="scanner-laser" id="scanner-laser"></div>
+            
+            <div class="scanner-idle-placeholder" id="scanner-idle-placeholder">
+              <span style="font-size: 2.5rem;">📷</span>
+              <span style="font-size: 0.88rem; font-weight: 600;">Quét mã QR bằng Camera</span>
+              <span style="font-size: 0.76rem; color: #64748b;">Chạm "Bật Camera Quét" bên dưới để bắt đầu</span>
+            </div>
+          </div>
+
+          <div class="scanner-status-text" id="scanner-status-text">
+            Hướng camera vào mã QR chia sẻ từ điện thoại của Trưởng nhóm
+          </div>
+
+          <div class="scanner-controls-row">
+            <button type="button" class="scanner-ctrl-btn primary" id="btn-toggle-camera-scan">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              <span id="label-toggle-camera">Bật Camera Quét</span>
+            </button>
+            <button type="button" class="scanner-ctrl-btn" id="btn-flip-camera" style="display: none;" title="Đổi camera trước/sau">
+              🔄 Đổi Camera
+            </button>
+            <button type="button" class="scanner-ctrl-btn" id="btn-trigger-file-qr" title="Chọn ảnh QR từ thư viện ảnh hoặc chụp ảnh">
+              📁 Tải ảnh QR
+            </button>
+            <input type="file" id="input-qr-file" accept="image/*" capture="environment" style="display: none;">
+          </div>
+        </div>
+
+        <div class="divider-with-text">HOẶC NHẬP MÃ PHÒNG</div>
+
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 14px;">
+          <div style="display: flex; gap: 8px;">
+            <input type="text" class="form-input" id="input-join-room-modal" placeholder="Mã phòng (VD: DALAT26)"
+              style="text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">
+            <button class="submit-btn" id="btn-submit-join-modal"
+              style="width: auto; padding: 10px 20px; margin-top: 0; white-space: nowrap;">Vào Phòng</button>
+          </div>
+        </div>
+
+        <!-- Tùy chọn tạo chuyến đi mới -->
+        <div style="text-align: center; margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--border-glass);">
+          <button type="button" id="btn-toggle-create-inline" style="background: none; border: none; color: #94a3b8; font-size: 0.82rem; cursor: pointer; text-decoration: underline;">
+            ✨ Bạn muốn tự tạo chuyến đi mới?
+          </button>
+          <div id="box-create-inline" style="display: none; margin-top: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 12px; text-align: left;">
+            <input type="text" class="form-input" id="input-new-trip-inline" placeholder="Tên chuyến đi (VD: Phú Quốc hè 2026)" style="margin-bottom: 8px;">
+            <button class="submit-btn" id="btn-submit-create-inline" style="margin-top: 0;">Tạo Chuyến Đi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. VietQR / MoMo Payment Modal -->
+    <div class="modal-overlay" id="modal-vietqr">
+      <div class="bottom-sheet" style="background: #ffffff; color: #000000;">
+        <div class="sheet-drag-handle" style="background: #cbd5e1;"></div>
+        <div class="sheet-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+          <h2 class="sheet-title" style="color: #a50064; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #d82d8b; border-radius: 6px; color: #fff; font-size: 0.8rem; font-weight: 900;">M</span>
+            <span>Mã QR Ví MoMo Chuyển Tiền</span>
+          </h2>
+          <button class="sheet-close-btn" data-close-modal="modal-vietqr"
+            style="background: #f1f5f9; color: #475569;">&times;</button>
+        </div>
+
+        <div class="vietqr-card" style="padding: 12px 0;">
+          <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">Người nhận tiền (Ví MoMo)</div>
+          <div id="qr-receiver-name" style="font-size: 1.15rem; font-weight: 800; color: #0f172a;">--</div>
+
+          <!-- Ảnh QR -->
+          <div class="qr-image-container">
+            <img id="qr-image-tag" src="" alt="Mã QR Ví MoMo">
+          </div>
+
+          <!-- Thông tin chi tiết kèm nút copy -->
+          <div class="qr-bank-details">
+            <div class="qr-detail-row">
+              <span style="color: #64748b;">Phương thức:</span>
+              <strong id="qr-bank-name" style="color: #d82d8b;">Ví MoMo</strong>
+            </div>
+            <div class="qr-detail-row">
+              <span style="color: #64748b;">Số MoMo:</span>
+              <span>
+                <strong id="qr-acc-no">--</strong>
+                <span class="copy-chip" id="btn-copy-acc">Copy</span>
+              </span>
+            </div>
+            <div class="qr-detail-row">
+              <span style="color: #64748b;">Số tiền:</span>
+              <span>
+                <strong id="qr-amount" style="color: #d82d8b; font-size: 1rem;">--</strong>
+                <span class="copy-chip" id="btn-copy-amount-qr">Copy</span>
+              </span>
+            </div>
+            <div class="qr-detail-row">
+              <span style="color: #64748b;">Lời nhắn:</span>
+              <span>
+                <span id="qr-desc" style="font-size: 0.78rem;">--</span>
+                <span class="copy-chip" id="btn-copy-desc">Copy</span>
+              </span>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+            <button type="button" class="submit-btn" id="btn-vietqr-open-bank"
+              style="background: linear-gradient(135deg, #d82d8b 0%, #a50064 100%); color: #fff; font-size: 0.9rem; font-weight: 700;">
+              🚀 Mở App MoMo Chuyển Tiền
+            </button>
+            <button type="button" class="submit-btn" id="btn-vietqr-download"
+              style="background: #f8fafc; color: #1e293b; font-size: 0.85rem; border: 1px solid #cbd5e1; box-shadow: none;">
+              📥 Tải Ảnh QR Vào Thư Viện Ảnh
+            </button>
+            <button type="button" class="submit-btn" id="btn-confirm-settled"
+              style="background: #10b981; color: #000; font-weight: 700; font-size: 0.88rem;">
+              ✓ Đã Chuyển Tiền Xong (Xóa Nợ)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4b. MoMo Transfer Modal -->
+    <div class="modal-overlay" id="modal-open-bank-app">
+      <div class="bottom-sheet" style="max-height: 88vh; display: flex; flex-direction: column;">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header" style="padding-bottom: 12px; border-bottom: 1px solid var(--border-glass);">
+          <h2 class="sheet-title" style="font-size: 1.05rem; display: flex; align-items: center; gap: 8px; color: #f472b6;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: #d82d8b; border-radius: 8px; color: #fff; font-weight: 900; font-size: 0.85rem;">M</span>
+            <span>Chuyển Tiền Qua Ví MoMo</span>
+          </h2>
+          <button class="sheet-close-btn" data-close-modal="modal-open-bank-app">&times;</button>
+        </div>
+
+        <div style="overflow-y: auto; padding: 14px 2px 20px; flex: 1;">
+          <!-- Card tóm tắt số tiền và người nhận -->
+          <div style="background: linear-gradient(135deg, rgba(216, 45, 139, 0.12) 0%, rgba(165, 0, 100, 0.2) 100%); border: 1.5px solid rgba(216, 45, 139, 0.4); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 14px; box-shadow: 0 4px 16px rgba(216, 45, 139, 0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 0.82rem; color: #fbcfe8;">Số tiền cần chuyển:</span>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <span id="bank-app-modal-amount" style="font-size: 1.3rem; font-weight: 800; color: #f472b6;">-- đ</span>
+                <button type="button" class="copy-chip" id="btn-copy-bank-app-amount" style="background: #d82d8b; color: #fff;">Copy</button>
+              </span>
+            </div>
+            <div style="font-size: 0.85rem; margin-bottom: 6px; display: flex; justify-content: space-between;">
+              <span style="color: #cbd5e1;">Chủ Ví MoMo:</span>
+              <strong id="bank-app-modal-receiver" style="color: #fff;">--</strong>
+            </div>
+            <div style="font-size: 0.85rem; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: #cbd5e1;">Số ĐT Ví MoMo:</span>
+              <span>
+                <strong id="bank-app-modal-acc" style="color: #fff; letter-spacing: 0.5px;">--</strong>
+                <button type="button" class="copy-chip" id="btn-copy-bank-app-acc" style="margin-left: 6px; background: #d82d8b; color: #fff;">Copy</button>
+              </span>
+            </div>
+            <div style="font-size: 0.82rem; display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: #cbd5e1;">Nội dung CK:</span>
+              <span>
+                <span id="bank-app-modal-desc" style="color: #cbd5e1; font-size: 0.78rem;">--</span>
+                <button type="button" class="copy-chip" id="btn-copy-bank-app-desc" style="margin-left: 6px; background: rgba(255,255,255,0.15); color: #fff;">Copy</button>
+              </span>
+            </div>
+          </div>
+
+          <!-- Duy nhất 1 nút Mở App MoMo -->
+          <div style="margin-bottom: 14px;">
+            <button type="button" class="open-momo-cta-btn" id="btn-momo-open-app" style="width: 100%;">
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #fff; border-radius: 8px; color: #d82d8b; font-weight: 900; font-size: 1rem;">M</span>
+              <span>🚀 MỞ APP MOMO ĐỂ CHUYỂN TIỀN</span>
+            </button>
+          </div>
+
+          <!-- Thông báo hướng dẫn tự động -->
+          <div style="background: rgba(216, 45, 139, 0.12); border: 1px solid rgba(216, 45, 139, 0.35); border-radius: var(--radius-md); padding: 11px 13px; margin-bottom: 14px; font-size: 0.8rem; color: #fbcfe8; line-height: 1.5;">
+            <div>📋 <strong>Đã tự động sao chép số tiền:</strong> <strong id="momo-modal-tip-amount" style="color: #fff; font-size: 0.95rem;">-- đ</strong></div>
+            <div style="margin-top: 4px; color: #cbd5e1; font-size: 0.76rem;">
+              • Khi MoMo mở ra, bạn chỉ cần <strong>chạm vào ô 0đ và chọn [Dán]</strong> là xong ngay!<br>
+              • <em>Hoặc:</em> Dùng App MoMo (chọn <strong>"Quét mọi QR"</strong>) quét mã bên dưới để <strong>tự động điền 100% người nhận & số tiền</strong>.
+            </div>
+          </div>
+
+          <!-- Khu vực xem mã QR MoMo trực tiếp -->
+          <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 14px; text-align: center; margin-bottom: 14px;">
+            <div style="font-size: 0.88rem; font-weight: 700; color: #f472b6; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span>📱 MÃ QR VÍ MOMO (TỰ ĐỘNG ĐIỀN SỐ TIỀN)</span>
+            </div>
+
+            <div id="momo-qr-type-hint" style="font-size: 0.75rem; color: #fbcfe8; margin-bottom: 10px;">
+              ⚡ Mở App MoMo ("Quét mọi QR") để quét. Tự động nhận diện người nhận & số tiền chính xác.
+            </div>
+
+            <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+              <img id="bank-app-modal-qr-img" src="" alt="Mã QR Chuyển Tiền" style="width: 200px; height: 200px; border-radius: 12px; background: #fff; padding: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.3);">
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="submit-btn" id="btn-bank-modal-download-qr"
+                style="flex: 1; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-glass); color: #fff; font-size: 0.8rem; padding: 9px; box-shadow: none;">
+                📥 Tải ảnh QR về máy
+              </button>
+              <button type="button" class="submit-btn" id="btn-bank-modal-view-qr"
+                style="flex: 1; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-glass); color: #fff; font-size: 0.8rem; padding: 9px; box-shadow: none;">
+                🔍 Xem ảnh QR lớn
+              </button>
+            </div>
+          </div>
+
+          <!-- Nút xác nhận đã trả -->
+          <button type="button" class="submit-btn" id="btn-bank-modal-confirm-paid"
+            style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #000; font-weight: 700;">
+            ✓ Tôi Đã Chuyển Tiền Xong (Ghi Nhận)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Share Trip Room Modal -->
+    <div class="modal-overlay" id="modal-share">
+      <div class="bottom-sheet">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">Chia Sẻ Chuyến Đi</h2>
+          <button class="sheet-close-btn" data-close-modal="modal-share">&times;</button>
+        </div>
+
+        <div style="text-align: center; padding: 10px 0;">
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
+            Quét mã QR bằng camera điện thoại của bạn bè để vào chung chuyến đi này:
+          </p>
+
+          <div
+            style="width: 200px; height: 200px; margin: 0 auto 16px auto; background: #fff; padding: 10px; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
+            <img id="share-qr-img" src="" alt="Share QR" style="width: 100%; height: 100%; object-fit: contain;">
+          </div>
+
+          <div
+            style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: var(--radius-md); margin-bottom: 12px;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Mã phòng của chuyến đi:</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent-amber); letter-spacing: 2px;"
+              id="share-room-code-display">DALAT26</div>
+          </div>
+
+          <!-- Network & Hosting Status Badge -->
+          <div id="share-host-badge"
+            style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.25); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 12px; font-size: 0.78rem; text-align: left; line-height: 1.45; color: #93c5fd;">
+            📶 <strong>Đang kết nối:</strong> Đang lấy địa chỉ máy chủ...
+          </div>
+
+          <div style="background: rgba(255,255,255,0.03); border: 1px dashed var(--border-glass); border-radius: var(--radius-md); padding: 8px 12px; margin-bottom: 14px; word-break: break-all; font-size: 0.78rem; color: #94a3b8;" id="share-link-display">
+            --
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="submit-btn" id="btn-copy-share-link" style="flex: 1; margin-top: 0;">
+              📋 Sao chép link mời
+            </button>
+            <button class="submit-btn" id="btn-copy-room-code" style="width: auto; padding: 10px 16px; margin-top: 0; background: rgba(255,255,255,0.08); border: 1px solid var(--border-glass); color: #fff;">
+              Copy mã phòng
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Summary Card Preview Modal -->
+    <div class="modal-overlay" id="modal-summary-card">
+      <div class="bottom-sheet">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">Phiếu Tổng Kết Chuyến Đi</h2>
+          <button class="sheet-close-btn" data-close-modal="modal-summary-card">&times;</button>
+        </div>
+
+        <div style="text-align: center;">
+          <div
+            style="max-height: 55vh; overflow-y: auto; border-radius: var(--radius-md); border: 1px solid var(--border-glass); margin-bottom: 16px;">
+            <img id="summary-card-preview-img" src="" alt="Summary Infographic" style="width: 100%; display: block;">
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <a id="btn-download-summary-img" download="TripSplit_Summary.png" class="submit-btn"
+              style="flex: 1; text-decoration: none; display: flex; align-items: center; justify-content: center; margin-top: 0;">
+              💾 Tải ảnh về máy
+            </a>
+            <button class="submit-btn" id="btn-share-zalo-native"
+              style="flex: 1; background: #0068ff; color: #fff; margin-top: 0;">
+              🚀 Chia sẻ nhanh
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Receipt Photo Fullscreen Modal -->
+    <div class="modal-overlay" id="modal-receipt-view">
+      <div class="bottom-sheet" style="padding: 16px;">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title" id="receipt-modal-title">Ảnh Hóa Đơn</h2>
+          <button class="sheet-close-btn" data-close-modal="modal-receipt-view">&times;</button>
+        </div>
+        <div style="max-height: 70vh; overflow: auto; text-align: center;">
+          <img id="receipt-fullscreen-img" src="" alt="Receipt Large"
+            style="max-width: 100%; border-radius: var(--radius-md);">
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. Group Fund & Contribution Modal (Optional) -->
+    <div class="modal-overlay" id="modal-group-fund">
+      <div class="bottom-sheet">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">Quản Lý Quỹ Nhóm & Thủ Quỹ</h2>
+          <button class="sheet-close-btn" data-close-modal="modal-group-fund">&times;</button>
+        </div>
+
+        <!-- Công tắc Bật/Tắt Quỹ Nhóm (Optional) -->
+        <div class="fund-toggle-card">
+          <div class="fund-toggle-info">
+            <div class="fund-toggle-title">
+              <span>Sử dụng Quỹ nhóm</span>
+              <span class="fund-toggle-badge" id="fund-toggle-status-badge">Đang tắt</span>
+            </div>
+            <div class="fund-toggle-desc">
+              Bật tính năng này nếu nhóm có gom trước một khoản tiền cho Thủ quỹ giữ để chi tiêu chung.
+            </div>
+          </div>
+          <label class="switch-toggle" for="fund-enable-switch">
+            <input type="checkbox" id="fund-enable-switch">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <!-- Vùng nội dung Quỹ Nhóm (chỉ hiển thị khi BẬT) -->
+        <div id="fund-modal-body" style="display: none;">
+          <!-- Chọn Thủ quỹ -->
+          <div
+            style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 16px;">
+            <label class="form-label" for="fund-treasurer-select">👑 Thủ quỹ chuyến đi (Người giữ tiền quỹ)</label>
+            <select class="form-select" id="fund-treasurer-select">
+              <!-- Populated via JS -->
+            </select>
+            <div id="fund-treasurer-bank-hint" style="font-size: 0.75rem; color: var(--accent-amber); margin-top: 6px;">
+            </div>
+          </div>
+
+          <!-- Form Nộp tiền vào Quỹ -->
+          <div
+            style="background: rgba(16, 185, 129, 0.05); border: 1px solid var(--border-highlight); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px;">
+            <h3 style="font-size: 0.95rem; font-weight: 700; color: #10b981; margin-bottom: 12px;">💰 Nộp Tiền Góp Quỹ
+            </h3>
+
+            <div class="form-group">
+              <label class="form-label" for="fund-contributor-select">Ai là người nộp tiền?</label>
+              <select class="form-select" id="fund-contributor-select">
+                <!-- Populated via JS -->
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="fund-contribute-amount">Số tiền nộp (VND)</label>
+              <input type="number" class="form-input" id="fund-contribute-amount" placeholder="VD: 500000" min="10000"
+                step="10000" value="500000" style="font-size: 1.15rem; font-weight: 700;">
+            </div>
+
+            <div class="quick-amount-pills" style="margin-bottom: 12px;">
+              <button type="button" class="quick-pill btn-fund-quick" data-amt="200000">200k</button>
+              <button type="button" class="quick-pill btn-fund-quick" data-amt="500000">500k</button>
+              <button type="button" class="quick-pill btn-fund-quick" data-amt="1000000">1tr</button>
+              <button type="button" class="quick-pill btn-fund-quick" data-amt="2000000">2tr</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button type="button" class="submit-btn" id="btn-qr-contribute-fund"
+                style="margin-top: 0; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #000;">
+                ⚡ Quét VietQR Chuyển Tiền Cho Thủ Quỹ
+              </button>
+              <button type="button" class="submit-btn" id="btn-confirm-contribute-fund" style="margin-top: 0;">
+                ✓ Xác Nhận Đã Nộp Vào Quỹ
+              </button>
+            </div>
+          </div>
+
+          <!-- Lịch sử đóng góp quỹ -->
+          <div class="section-title" style="margin-bottom: 10px;">
+            <span>Lịch sử các lần góp quỹ</span>
+            <span class="count-badge" id="fund-contrib-count">0</span>
+          </div>
+          <div id="fund-contributions-list"
+            style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Gợi ý khi Quỹ Nhóm đang TẮT -->
+        <div id="fund-modal-disabled-hint"
+          style="text-align: center; padding: 24px 16px; color: var(--text-muted); font-size: 0.85rem; line-height: 1.6;">
+          <div style="font-size: 2.2rem; margin-bottom: 10px;">🎒</div>
+          <div style="font-weight: 700; color: #fff; margin-bottom: 6px;">Chuyến đi chưa sử dụng Quỹ nhóm</div>
+          <div>Mặc định mỗi thành viên sẽ tự bỏ tiền túi ra chi trả và hệ thống sẽ tự động tính toán nợ tối ưu khi quyết
+            toán. Nếu cả nhóm muốn gom tiền trước cho 1 người giữ, hãy gạt công tắc ở trên để bật nhé!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. User Profile Modal -->
+    <div class="modal-overlay" id="modal-user-profile">
+      <div class="bottom-sheet">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">Hồ Sơ Cá Nhân</h2>
+          <button class="sheet-close-btn" data-close-modal="modal-user-profile">&times;</button>
+        </div>
+
+        <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
+          Thông tin này được lưu trên thiết bị của bạn và tự động nạp vào mọi chuyến đi bạn tạo hoặc tham gia. Bạn bè sẽ
+          quét mã VietQR chuyển khoản theo đúng STK này!
+        </div>
+
+        <form id="form-user-profile">
+          <div class="form-group">
+            <label class="form-label" for="profile-name-input">Họ và tên / Biệt danh *</label>
+            <input type="text" class="form-input" id="profile-name-input" placeholder="VD: Nguyễn Tuấn Anh" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="profile-phone-input">Số điện thoại / Zalo (tiện liên hệ)</label>
+            <input type="tel" class="form-input" id="profile-phone-input" placeholder="VD: 0912345678">
+          </div>
+
+          <input type="hidden" id="profile-bank-select" value="MOMO">
+          <div class="form-group">
+            <label class="form-label" for="profile-acc-input" style="color: #f472b6; font-weight: 700;">📱 Số điện thoại Ví MoMo nhận tiền *</label>
+            <input type="tel" class="form-input" id="profile-acc-input" placeholder="VD: 0987654321" required style="border-color: rgba(216, 45, 139, 0.4);">
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Dùng SĐT này để nhận tiền quyết toán và tạo mã QR MoMo cho nhóm.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="profile-acc-name">Tên chủ Ví MoMo (in hoa không dấu)</label>
+            <input type="text" class="form-input" id="profile-acc-name" placeholder="VD: NGUYEN TUAN ANH"
+              style="text-transform: uppercase;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="profile-momo-link" style="color: #f472b6;">🔗 Link nhận tiền MoMo cá nhân (Tùy chọn)</label>
+            <input type="text" class="form-input" id="profile-momo-link" placeholder="VD: https://me.momo.vn/0987654321" style="border-color: rgba(216, 45, 139, 0.4);">
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Lấy link tại App MoMo ➔ Bấm vào tên bạn ➔ "Link nhận tiền của tôi". Người chuyển bấm Mở App sẽ tự vào thẳng trang chuyển tiền!</div>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <button type="submit" class="submit-btn" id="btn-save-profile">Lưu Hồ Sơ Cá Nhân</button>
+          </div>
+        </form>
+
+        <!-- Quản lý mật khẩu & Đăng xuất -->
+        <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 8px;">
+          <button type="button" class="submit-btn" id="btn-open-change-password"
+            style="background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border-glass); color: var(--text-main); box-shadow: none; font-size: 0.88rem; padding: 11px;">
+            🔒 Đổi Mật Khẩu Cá Nhân
+          </button>
+          <button type="button" class="submit-btn" id="btn-auth-logout"
+            style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; box-shadow: none; font-size: 0.88rem; padding: 11px;">
+            🚪 Đăng Xuất Khỏi Thiết Bị Này
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. Pending Approvals Modal (Trưởng nhóm duyệt) -->
+    <div class="modal-overlay" id="modal-pending-approvals">
+      <div class="bottom-sheet">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">Phê Duyệt Thành Viên Mới</h2>
+          <button class="sheet-close-btn" data-close-modal="modal-pending-approvals">&times;</button>
+        </div>
+
+        <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
+          Chỉ những người được bạn (Trưởng nhóm) phê duyệt mới có thể vào phòng xem và ghi chép chi tiêu.
+        </div>
+
+        <div id="modal-pending-list"
+          style="display: flex; flex-direction: column; gap: 10px; max-height: 360px; overflow-y: auto;">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 11. Waiting Approval Screen (Dành cho thành viên đang chờ Trưởng nhóm duyệt) -->
+    <div class="modal-overlay" id="modal-waiting-approval">
+      <div class="bottom-sheet" style="text-align: center; padding-top: 24px;">
+        <div class="sheet-drag-handle"></div>
+        <div style="font-size: 3.5rem; margin-bottom: 14px;">⏳</div>
+        <h2 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 8px;">Đang Chờ Phê Duyệt</h2>
+        <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">
+          Yêu cầu tham gia chuyến đi <strong id="waiting-trip-name" style="color: #38bdf8;">--</strong> (#<span
+            id="waiting-trip-code">--</span>) của bạn đã được gửi.<br>
+          Vui lòng đợi Trưởng nhóm <strong id="waiting-host-name" style="color: #10b981;">--</strong> bấm duyệt để vào
+          phòng nhé!
+        </p>
+
+        <div
+          style="background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 20px; text-align: left;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Thông tin bạn đã gửi:</div>
+          <div style="font-weight: 700; color: #fff;" id="waiting-user-info">--</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button class="submit-btn" id="btn-refresh-approval-status">🔄 Kiểm Tra Lại Trạng Thái</button>
+          <button class="submit-btn" id="btn-cancel-join-request"
+            style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; box-shadow: none;">Hủy
+            Yêu Cầu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12. Admin User Management Modal (Bảng Quản Trị Cấp Tài Khoản Dành Cho Admin) -->
+    <div class="modal-overlay" id="modal-admin-users">
+      <div class="bottom-sheet" style="max-height: 92vh;">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <div>
+            <h2 class="sheet-title">👑 Quản Lý & Cấp Tài Khoản</h2>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Chỉ Admin mới có quyền tạo và
+              quản lý tài khoản người dùng</div>
+          </div>
+          <button class="sheet-close-btn" data-close-modal="modal-admin-users">&times;</button>
+        </div>
+
+        <!-- Action Bar: Add User & Export/Import -->
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <button class="submit-btn" id="btn-show-create-user-form"
+            style="flex: 1; margin: 0; padding: 10px 12px; font-size: 0.85rem; background: linear-gradient(135deg, var(--primary) 0%, #059669 100%);">
+            ✨ + Cấp Tài Khoản Mới
+          </button>
+          <button class="trip-badge-btn" id="btn-export-accounts" title="Sao lưu CSDL tài khoản ra file JSON">💾 Sao
+            lưu</button>
+        </div>
+
+        <!-- Form Cấp / Chỉnh Sửa Tài Khoản Thành Viên -->
+        <div id="admin-create-user-box"
+          style="display: none; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 16px;">
+          <div id="admin-form-title"
+            style="font-weight: 700; color: var(--primary); margin-bottom: 12px; font-size: 0.9rem;">
+            Tạo Tài Khoản Thành Viên Mới
+          </div>
+          <form id="form-admin-create-user">
+            <input type="hidden" id="admin-edit-user-id" value="">
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label" for="new-user-fullname">Họ và tên thành viên *</label>
+              <input type="text" class="form-input" id="new-user-fullname" placeholder="VD: Trần Thị Linh" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+              <div>
+                <label class="form-label" for="new-user-username">Tên đăng nhập / Mã *</label>
+                <input type="text" class="form-input" id="new-user-username" placeholder="VD: linh26" required
+                  autocomplete="off">
+              </div>
+              <div>
+                <label class="form-label" for="new-user-password">Mật khẩu truy cập *</label>
+                <input type="text" class="form-input" id="new-user-password" placeholder="VD: 123456" required
+                  autocomplete="off">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label" for="new-user-phone">Số điện thoại / Zalo</label>
+              <input type="tel" class="form-input" id="new-user-phone" placeholder="VD: 0912345678">
+            </div>
+
+            <input type="hidden" id="new-user-bank-select" value="MOMO">
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 10px;">
+              <div>
+                <label class="form-label" for="new-user-acc-input" style="color: #f472b6;">Số ĐT Ví MoMo</label>
+                <input type="tel" class="form-input" id="new-user-acc-input" placeholder="VD: 0987654321">
+              </div>
+              <div>
+                <label class="form-label" for="new-user-acc-name">Tên chủ Ví MoMo</label>
+                <input type="text" class="form-input" id="new-user-acc-name" placeholder="VD: TRAN THI LINH"
+                  style="text-transform: uppercase;">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label" for="new-user-role-select">Vai trò hệ thống</label>
+              <select class="form-select" id="new-user-role-select">
+                <option value="member">Thành viên</option>
+                <option value="admin">Quản trị viên (Admin)</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button type="submit" class="submit-btn" id="btn-admin-submit-user"
+                style="flex: 1; margin: 0; padding: 10px; font-size: 0.88rem;">Xác Nhận Tạo</button>
+              <button type="button" class="submit-btn" id="btn-cancel-create-user"
+                style="flex: 1; margin: 0; padding: 10px; font-size: 0.88rem; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-glass); color: var(--text-muted); box-shadow: none;">Đóng
+                Lại</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Danh sách tài khoản đã cấp -->
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">
+          DANH SÁCH TÀI KHOẢN TRÊN HỆ THỐNG (<span id="admin-user-count">0</span>)
+        </div>
+        <div id="admin-users-list"
+          style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 400px; padding-bottom: 10px;">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 13. Change Password Modal (Đổi mật khẩu cá nhân) -->
+    <div class="modal-overlay" id="modal-change-password">
+      <div class="bottom-sheet">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">Đổi Mật Khẩu Truy Cập</h2>
+          <button class="sheet-close-btn" data-close-modal="modal-change-password">&times;</button>
+        </div>
+
+        <form id="form-change-password">
+          <div class="form-group">
+            <label class="form-label" for="pwd-current">Mật khẩu hiện tại *</label>
+            <input type="password" class="form-input" id="pwd-current" placeholder="Nhập mật khẩu hiện tại" required
+              autocomplete="current-password">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="pwd-new">Mật khẩu mới (ít nhất 4 ký tự) *</label>
+            <input type="password" class="form-input" id="pwd-new" placeholder="Nhập mật khẩu mới" required
+              autocomplete="new-password">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="pwd-confirm">Xác nhận mật khẩu mới *</label>
+            <input type="password" class="form-input" id="pwd-confirm" placeholder="Nhập lại mật khẩu mới" required
+              autocomplete="new-password">
+          </div>
+
+          <div style="margin-top: 20px;">
+            <button type="submit" class="submit-btn" id="btn-save-new-pwd">Lưu Mật Khẩu Mới</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 14. Rename Trip Modal (Đổi tên chuyến đi) -->
+    <div class="modal-overlay" id="modal-rename-trip">
+      <div class="bottom-sheet">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">✏️ Đổi Tên Chuyến Đi</h2>
+          <button class="sheet-close-btn" data-close-modal="modal-rename-trip">&times;</button>
+        </div>
+
+        <form id="form-rename-trip">
+          <div class="form-group">
+            <label class="form-label" for="rename-trip-input">Tên chuyến đi mới *</label>
+            <input type="text" class="form-input" id="rename-trip-input" placeholder="VD: Du Lịch Nha Trang Hè 2026"
+              required>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <button type="submit" class="submit-btn" id="btn-save-trip-name">Lưu Tên Chuyến Đi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div> <!-- End App Container -->
+
+  <!-- Dynamic Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Hidden mount target for QR decoding -->
+  <div id="qr-reader-hidden-view" style="width: 1px; height: 1px; opacity: 0; position: absolute; pointer-events: none;"></div>
+
+  <!-- JavaScript Modules with Cache-Busting -->
+  <script src="js/banks.js?v=1.7.2"></script>
+  <script src="js/vietqr.js?v=1.7.2"></script>
+  <script src="js/debt.js?v=1.7.2"></script>
+  <script src="js/export.js?v=1.7.2"></script>
+  <script src="js/realtime.js?v=1.7.2"></script>
+  <script src="js/auth.js?v=1.7.2"></script>
+  <script src="js/jsqr.min.js?v=1.7.2"></script>
+  <script src="js/html5-qrcode.min.js?v=1.7.2"></script>
+  <script src="js/app.js?v=1.7.2"></script>
+
+  <script>
+    // Tự động xóa cache cũ của Service Worker để luôn nhận code mới
+    if ('caches' in window) {
+      caches.keys().then(function (names) {
+        names.forEach(function (name) {
+          if (name !== 'tripsplit-v1.7.2') {
+            console.log('Purging old cache:', name);
+            caches.delete(name);
+          }
+        });
+      });
+    }
+  </script>
+</body>
+
+</html>
