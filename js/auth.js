@@ -116,8 +116,34 @@
         const serverUsers = await res.json();
         if (!Array.isArray(serverUsers) || serverUsers.length === 0) return;
 
-        this.users = serverUsers;
+        // Hợp nhất thông minh (Smart Merge):
+        // Giữ lại các user đã tạo trên máy khách phòng khi Render/Server vừa khởi động lại hoặc ngủ đông
+        const localUsers = Array.isArray(this.users) ? this.users : [];
+        const serverUserIds = new Set(serverUsers.map(u => u.id));
+        const serverUsernames = new Set(serverUsers.map(u => (u.username || '').toLowerCase()));
+
+        // Tìm các tài khoản có ở máy khách mà server bị thiếu
+        const localOnlyUsers = localUsers.filter(u => {
+          if (!u || !u.id || u.status === 'deleted') return false;
+          const uname = (u.username || '').toLowerCase();
+          return !serverUserIds.has(u.id) && (!uname || !serverUsernames.has(uname));
+        });
+
+        let hasLocalAdditions = false;
+        let mergedUsers = [...serverUsers];
+
+        if (localOnlyUsers.length > 0) {
+          hasLocalAdditions = true;
+          mergedUsers = mergedUsers.concat(localOnlyUsers);
+        }
+
+        this.users = mergedUsers;
         localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(this.users));
+
+        // Nếu máy khách có user mà server bị mất (do ngủ đông / restart), tự động đẩy lên lưu lại
+        if (hasLocalAdditions) {
+          this.saveUsers();
+        }
 
         if (this.currentSession) {
           const validUser = this.users.find(u => u.id === this.currentSession.id);
@@ -438,8 +464,18 @@
         return { success: false, message: 'Bạn không thể tự xóa tài khoản của chính mình!' };
       }
 
+      const targetUser = this.users.find(u => u.id === userId);
       this.users = this.users.filter(u => u.id !== userId);
-      this.saveUsers();
+      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(this.users));
+
+      // Báo máy chủ xóa tài khoản (đánh dấu status: 'deleted' để server gỡ khỏi database)
+      if (targetUser) {
+        fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify([...this.users, { ...targetUser, status: 'deleted' }])
+        }).catch(err => console.warn('Lỗi push xóa user lên server:', err));
+      }
 
       return { success: true };
     }

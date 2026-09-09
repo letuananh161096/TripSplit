@@ -567,9 +567,29 @@
           body: JSON.stringify(trips)
         });
       } else if (serverTrips.length > 0) {
-        // Server đã có chuyến đi -> cập nhật về máy
-        trips = serverTrips;
+        // Hợp nhất thông minh: Giữ lại chuyến đi trên máy nếu server bị thiếu (do Render ngủ đông/restart)
+        const serverTripCodes = new Set(serverTrips.map(t => t.code || t.id));
+        const localOnlyTrips = (trips || []).filter(t => t && (t.code || t.id) && t.status !== 'deleted' && !serverTripCodes.has(t.code || t.id));
+
+        let hasLocalAdditions = false;
+        let mergedTrips = [...serverTrips];
+        if (localOnlyTrips.length > 0) {
+          hasLocalAdditions = true;
+          mergedTrips = mergedTrips.concat(localOnlyTrips);
+        }
+
+        trips = mergedTrips;
         localStorage.setItem('tripsplit_all_trips', JSON.stringify(trips));
+
+        // Tự động đẩy lên lại server nếu máy khách có chuyến đi mà server bị thiếu
+        if (hasLocalAdditions) {
+          fetch('/api/trips', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(trips)
+          }).catch(err => console.warn('Lỗi push re-sync trips:', err));
+        }
+
         if (currentTrip) {
           const fresh = trips.find(t => t.id === currentTrip.id || t.code === currentTrip.code);
           const profile = getUserProfile();
@@ -2523,6 +2543,14 @@
     }
 
     saveTripsToStorage();
+
+    // Báo máy chủ xóa chuyến đi (đánh dấu status: 'deleted')
+    fetch('/api/trips', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify([...trips, { ...trip, status: 'deleted' }])
+    }).catch(err => console.warn('Lỗi push xóa trip lên server:', err));
+
     renderAll();
     renderRecentTrips();
     showToast(`Đã xóa chuyến đi "${trip.name}"!`, 'success');

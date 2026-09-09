@@ -4,6 +4,7 @@ import socket
 import sys
 import os
 import json
+import urllib.parse
 
 PORT = int(os.environ.get('PORT', 8080))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -38,8 +39,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        clean_path = urllib.parse.urlparse(self.path).path
+
         # API Lấy thông tin server mạng LAN
-        if self.path == '/api/info':
+        if clean_path == '/api/info':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.end_headers()
@@ -51,7 +54,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(info).encode('utf-8'))
             return
         # API Lấy danh sách tài khoản đồng bộ giữa các thiết bị
-        elif self.path == '/api/users':
+        elif clean_path == '/api/users':
             self.handle_get_json(USERS_FILE, default=[{
                 "id": "usr_admin",
                 "username": "admin",
@@ -67,19 +70,21 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             }])
             return
         # API Lấy danh sách chuyến đi đồng bộ
-        elif self.path == '/api/trips':
+        elif clean_path == '/api/trips':
             self.handle_get_json(TRIPS_FILE, default=[])
             return
 
         super().do_GET()
 
     def do_POST(self):
+        clean_path = urllib.parse.urlparse(self.path).path
+
         # API Lưu danh sách tài khoản
-        if self.path == '/api/users':
+        if clean_path == '/api/users':
             self.handle_post_json(USERS_FILE)
             return
         # API Lưu danh sách chuyến đi
-        elif self.path == '/api/trips':
+        elif clean_path == '/api/trips':
             self.handle_post_json(TRIPS_FILE)
             return
 
@@ -117,7 +122,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     if isinstance(existing, list) and isinstance(parsed, list):
                         parsed = merge_trips_data(existing, parsed)
                 except Exception as ex:
-                    print('Lỗi merge trips:', ex)
+                    print('⚠️ Lỗi merge trips:', ex)
             elif file_path == USERS_FILE and os.path.exists(file_path):
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
@@ -125,15 +130,21 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     if isinstance(existing, list) and isinstance(parsed, list):
                         parsed = merge_users_data(existing, parsed)
                 except Exception as ex:
-                    print('Lỗi merge users:', ex)
+                    print('⚠️ Lỗi merge users:', ex)
 
             with open(file_path, 'w', encoding='utf-8') as f:
                 json.dump(parsed, f, ensure_ascii=False, indent=2)
+            
+            target_name = os.path.basename(file_path)
+            item_count = len(parsed) if isinstance(parsed, list) else 1
+            print(f"✅ [DATA SYNC] Đã lưu thành công {item_count} mục vào {target_name}")
+
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.end_headers()
-            self.wfile.write(json.dumps({"success": True}).encode('utf-8'))
+            self.wfile.write(json.dumps({"success": True, "count": item_count}).encode('utf-8'))
         except Exception as e:
+            print(f"❌ [DATA SYNC ERROR] Lỗi ghi file {file_path}: {e}")
             self.send_response(500)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.end_headers()
@@ -147,6 +158,12 @@ def merge_trips_data(existing_trips, incoming_trips):
         code = inc.get('code')
         if not code:
             continue
+
+        # Nếu chuyến đi được đánh dấu xóa
+        if inc.get('status') == 'deleted':
+            trips_map.pop(code, None)
+            continue
+
         if code in trips_map:
             cur = trips_map[code]
             # Giữ hostId nếu client vô tình gửi thiếu
@@ -179,7 +196,7 @@ def merge_trips_data(existing_trips, incoming_trips):
             trips_map[code] = inc
         else:
             trips_map[code] = inc
-    return list(trips_map.values())
+    return [t for t in trips_map.values() if isinstance(t, dict) and t.get('status') != 'deleted']
 
 def merge_users_data(existing_users, incoming_users):
     users_map = {}
@@ -200,6 +217,13 @@ def merge_users_data(existing_users, incoming_users):
         uname = inc.get('username', '').lower() if inc.get('username') else None
 
         target_id = uid if uid in users_map else (uname_to_id.get(uname) if uname else None)
+
+        # Xóa tài khoản nếu nhận trạng thái deleted
+        if inc.get('status') == 'deleted':
+            if target_id and target_id in users_map:
+                del users_map[target_id]
+            continue
+
         if target_id and target_id in users_map:
             cur = users_map[target_id]
             for k, v in inc.items():
@@ -211,7 +235,7 @@ def merge_users_data(existing_users, incoming_users):
                 if uname:
                     uname_to_id[uname] = uid
 
-    return list(users_map.values())
+    return [u for u in users_map.values() if isinstance(u, dict) and u.get('status') != 'deleted']
 
 def main():
     os.chdir(BASE_DIR)
