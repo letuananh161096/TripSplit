@@ -53,10 +53,11 @@ def get_db_connection():
     if m:
         user, pwd, ref, db = m.groups()
         pooler_user = f'postgres.{ref}' if not user.startswith('postgres.') else user
-        pooler_6543 = f'postgresql://{pooler_user}:{pwd}@aws-0-ap-southeast-1.pooler.supabase.com:6543/{db}'
-        pooler_5432 = f'postgresql://{pooler_user}:{pwd}@aws-0-ap-southeast-1.pooler.supabase.com:5432/{db}'
-        # Thử kết nối qua Pooler trước
-        urls_to_try = [pooler_6543, pooler_5432, db_url]
+        # Dự án của bạn nằm tại Tokyo ap-northeast-1
+        tokyo_6543 = f'postgresql://{pooler_user}:{pwd}@aws-0-ap-northeast-1.pooler.supabase.com:6543/{db}'
+        tokyo_5432 = f'postgresql://{pooler_user}:{pwd}@aws-0-ap-northeast-1.pooler.supabase.com:5432/{db}'
+        sg_6543 = f'postgresql://{pooler_user}:{pwd}@aws-0-ap-southeast-1.pooler.supabase.com:6543/{db}'
+        urls_to_try = [tokyo_6543, tokyo_5432, sg_6543, db_url]
 
     errors = []
     for candidate_url in urls_to_try:
