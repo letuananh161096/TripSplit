@@ -58,16 +58,18 @@ def get_db_connection():
         # Thử kết nối qua Pooler trước
         urls_to_try = [pooler_6543, pooler_5432, db_url]
 
-    last_ex = None
+    errors = []
     for candidate_url in urls_to_try:
         try:
             _db_conn = try_connect_pg(candidate_url)
             _db_last_error = None
             return _db_conn
         except Exception as ex:
+            host_part = candidate_url.split('@')[-1] if '@' in candidate_url else 'url'
+            errors.append(f"{host_part}: {str(ex).strip()}")
             last_ex = ex
 
-    _db_last_error = str(last_ex)
+    _db_last_error = " ; ".join(errors)
     print(f"⚠️ [DATABASE] Lỗi kết nối PostgreSQL/Supabase: {_db_last_error}")
     _db_conn = None
     return None
