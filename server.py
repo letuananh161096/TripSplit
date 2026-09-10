@@ -6,11 +6,190 @@ import os
 import json
 import urllib.parse
 
+try:
+    import psycopg2
+    from psycopg2.extras import Json
+    HAS_POSTGRES = True
+except ImportError:
+    HAS_POSTGRES = False
+
 PORT = int(os.environ.get('PORT', 8080))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 USERS_FILE = os.path.join(DATA_DIR, 'users.json')
 TRIPS_FILE = os.path.join(DATA_DIR, 'trips.json')
+
+_db_conn = None
+
+def get_db_connection():
+    global _db_conn
+    db_url = os.environ.get('DATABASE_URL') or os.environ.get('SUPABASE_DB_URL')
+    if not db_url or not HAS_POSTGRES:
+        return None
+    
+    try:
+        if _db_conn is not None and not _db_conn.closed:
+            with _db_conn.cursor() as cur:
+                cur.execute("SELECT 1;")
+            return _db_conn
+    except Exception:
+        _db_conn = None
+
+    try:
+        clean_url = db_url.strip()
+        if clean_url.startswith('postgres://'):
+            clean_url = 'postgresql://' + clean_url[len('postgres://'):]
+        _db_conn = psycopg2.connect(clean_url, connect_timeout=10)
+        _db_conn.autocommit = True
+        return _db_conn
+    except Exception as ex:
+        print(f"⚠️ [DATABASE] Lỗi kết nối PostgreSQL/Supabase: {ex}")
+        _db_conn = None
+        return None
+
+def init_database():
+    conn = get_db_connection()
+    if not conn:
+        print("ℹ️ [DATABASE] Không có DATABASE_URL hoặc chưa có kết nối. Hệ thống dùng tệp JSON cục bộ.")
+        return
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS trips (
+                    code VARCHAR(100) PRIMARY KEY,
+                    name VARCHAR(255),
+                    data JSONB NOT NULL,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE IF NOT EXISTS users (
+                    id VARCHAR(100) PRIMARY KEY,
+                    username VARCHAR(100),
+                    data JSONB NOT NULL,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+
+            cur.execute("SELECT COUNT(*) FROM users;")
+            if cur.fetchone()[0] == 0 and os.path.exists(USERS_FILE):
+                try:
+                    with open(USERS_FILE, 'r', encoding='utf-8') as f:
+                        init_users = json.load(f)
+                    if isinstance(init_users, list):
+                        for u in init_users:
+                            uid = u.get('id')
+                            uname = u.get('username')
+                            if uid:
+                                cur.execute(
+                                    "INSERT INTO users (id, username, data) VALUES (%s, %s, %s) ON CONFLICT (id) DO NOTHING;",
+                                    (uid, uname, Json(u))
+                                )
+                        print(f"🌱 [DATABASE SEED] Đã chuyển thành công {len(init_users)} tài khoản ban đầu vào Supabase!")
+                except Exception as ex:
+                    print(f"⚠️ [DATABASE SEED] Lỗi import users: {ex}")
+
+            cur.execute("SELECT COUNT(*) FROM trips;")
+            if cur.fetchone()[0] == 0 and os.path.exists(TRIPS_FILE):
+                try:
+                    with open(TRIPS_FILE, 'r', encoding='utf-8') as f:
+                        init_trips = json.load(f)
+                    if isinstance(init_trips, list):
+                        for t in init_trips:
+                            code = t.get('code')
+                            name = t.get('name')
+                            if code:
+                                cur.execute(
+                                    "INSERT INTO trips (code, name, data) VALUES (%s, %s, %s) ON CONFLICT (code) DO NOTHING;",
+                                    (code, name, Json(t))
+                                )
+                        print(f"🌱 [DATABASE SEED] Đã chuyển thành công {len(init_trips)} chuyến đi ban đầu vào Supabase!")
+                except Exception as ex:
+                    print(f"⚠️ [DATABASE SEED] Lỗi import trips: {ex}")
+
+        print("🎉 [DATABASE] Đã kết nối Supabase thành công và sẵn sàng lưu trữ đám mây vĩnh viễn!")
+    except Exception as ex:
+        print(f"⚠️ [DATABASE] Lỗi khởi tạo bảng: {ex}")
+
+def get_db_users():
+    conn = get_db_connection()
+    if not conn:
+        return None
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT data FROM users ORDER BY updated_at ASC;")
+            rows = cur.fetchall()
+            return [r[0] for r in rows if r and r[0]]
+    except Exception as ex:
+        print(f"⚠️ [DB GET USERS ERROR]: {ex}")
+        return None
+
+def get_db_trips():
+    conn = get_db_connection()
+    if not conn:
+        return None
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT data FROM trips ORDER BY updated_at ASC;")
+            rows = cur.fetchall()
+            return [r[0] for r in rows if r and r[0]]
+    except Exception as ex:
+        print(f"⚠️ [DB GET TRIPS ERROR]: {ex}")
+        return None
+
+def save_db_users(users_list):
+    conn = get_db_connection()
+    if not conn or not isinstance(users_list, list):
+        return False
+    try:
+        with conn.cursor() as cur:
+            for u in users_list:
+                if not isinstance(u, dict):
+                    continue
+                uid = u.get('id')
+                uname = u.get('username')
+                status = u.get('status')
+                if uid:
+                    if status == 'deleted':
+                        cur.execute("DELETE FROM users WHERE id = %s;", (uid,))
+                    else:
+                        cur.execute("""
+                            INSERT INTO users (id, username, data, updated_at)
+                            VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                            ON CONFLICT (id) DO UPDATE
+                            SET data = EXCLUDED.data, username = EXCLUDED.username, updated_at = CURRENT_TIMESTAMP;
+                        """, (uid, uname, Json(u)))
+        return True
+    except Exception as ex:
+        print(f"⚠️ [DB SAVE USERS ERROR]: {ex}")
+        return False
+
+def save_db_trips(trips_list):
+    conn = get_db_connection()
+    if not conn or not isinstance(trips_list, list):
+        return False
+    try:
+        with conn.cursor() as cur:
+            active_codes = set()
+            for t in trips_list:
+                if not isinstance(t, dict):
+                    continue
+                code = t.get('code')
+                name = t.get('name')
+                if code:
+                    active_codes.add(code)
+                    cur.execute("""
+                        INSERT INTO trips (code, name, data, updated_at)
+                        VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                        ON CONFLICT (code) DO UPDATE
+                        SET data = EXCLUDED.data, name = EXCLUDED.name, updated_at = CURRENT_TIMESTAMP;
+                    """, (code, name, Json(t)))
+            if active_codes:
+                cur.execute("DELETE FROM trips WHERE code NOT IN %s;", (tuple(active_codes),))
+            elif len(trips_list) == 0:
+                cur.execute("DELETE FROM trips;")
+        return True
+    except Exception as ex:
+        print(f"⚠️ [DB SAVE TRIPS ERROR]: {ex}")
+        return False
 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -25,7 +204,6 @@ def get_local_ip():
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
-        # Cache control cho phát triển
         self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
         self.send_header('Pragma', 'no-cache')
         self.send_header('Expires', '0')
@@ -41,7 +219,6 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         clean_path = urllib.parse.urlparse(self.path).path
 
-        # API Lấy thông tin server mạng LAN
         if clean_path == '/api/info':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
@@ -49,27 +226,26 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             info = {
                 "localIp": get_local_ip(),
                 "port": PORT,
-                "environment": "cloud" if os.environ.get('PORT') else "local"
+                "environment": "cloud" if os.environ.get('PORT') else "local",
+                "database": "supabase" if (os.environ.get('DATABASE_URL') or os.environ.get('SUPABASE_DB_URL')) else "local_json"
             }
             self.wfile.write(json.dumps(info).encode('utf-8'))
             return
-        # API Lấy danh sách tài khoản đồng bộ giữa các thiết bị
         elif clean_path == '/api/users':
             self.handle_get_json(USERS_FILE, default=[{
                 "id": "usr_admin",
                 "username": "admin",
-                "passwordHash": "TripSplit@2026",
-                "name": "Quản trị viên (Admin)",
+                "passwordHash": "Letuananh1996",
+                "name": "Hương, T.Anh",
                 "phone": "0900000000",
-                "bankCode": "MB",
+                "bankCode": "MOMO",
                 "accountNo": "0900000000",
-                "accountName": "QUAN TRI VIEN",
+                "accountName": "HUONG VA TUAN ANH",
                 "role": "admin",
                 "status": "active",
                 "createdAt": "2026-01-01T00:00:00.000Z"
             }])
             return
-        # API Lấy danh sách chuyến đi đồng bộ
         elif clean_path == '/api/trips':
             self.handle_get_json(TRIPS_FILE, default=[])
             return
@@ -79,11 +255,9 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         clean_path = urllib.parse.urlparse(self.path).path
 
-        # API Lưu danh sách tài khoản
         if clean_path == '/api/users':
             self.handle_post_json(USERS_FILE)
             return
-        # API Lưu danh sách chuyến đi
         elif clean_path == '/api/trips':
             self.handle_post_json(TRIPS_FILE)
             return
@@ -91,6 +265,36 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         super().do_POST()
 
     def handle_get_json(self, file_path, default=None):
+        if file_path == USERS_FILE:
+            db_data = get_db_users()
+            if db_data is not None and len(db_data) > 0:
+                try:
+                    os.makedirs(DATA_DIR, exist_ok=True)
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        json.dump(db_data, f, ensure_ascii=False, indent=2)
+                except Exception:
+                    pass
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(json.dumps(db_data, ensure_ascii=False).encode('utf-8'))
+                return
+
+        elif file_path == TRIPS_FILE:
+            db_data = get_db_trips()
+            if db_data is not None and len(db_data) > 0:
+                try:
+                    os.makedirs(DATA_DIR, exist_ok=True)
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        json.dump(db_data, f, ensure_ascii=False, indent=2)
+                except Exception:
+                    pass
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(json.dumps(db_data, ensure_ascii=False).encode('utf-8'))
+                return
+
         os.makedirs(DATA_DIR, exist_ok=True)
         if not os.path.exists(file_path):
             with open(file_path, 'w', encoding='utf-8') as f:
@@ -114,30 +318,39 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             body = self.rfile.read(length).decode('utf-8')
             parsed = json.loads(body)
 
-            # Hợp nhất thông minh cho trips để tránh mất phòng khi nhiều máy gửi cùng lúc
-            if file_path == TRIPS_FILE and os.path.exists(file_path):
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        existing = json.load(f)
-                    if isinstance(existing, list) and isinstance(parsed, list):
-                        parsed = merge_trips_data(existing, parsed)
-                except Exception as ex:
-                    print('⚠️ Lỗi merge trips:', ex)
-            elif file_path == USERS_FILE and os.path.exists(file_path):
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        existing = json.load(f)
-                    if isinstance(existing, list) and isinstance(parsed, list):
-                        parsed = merge_users_data(existing, parsed)
-                except Exception as ex:
-                    print('⚠️ Lỗi merge users:', ex)
+            existing = None
+            if file_path == TRIPS_FILE:
+                existing = get_db_trips()
+                if existing is None and os.path.exists(file_path):
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            existing = json.load(f)
+                    except Exception:
+                        pass
+                if isinstance(existing, list) and isinstance(parsed, list):
+                    parsed = merge_trips_data(existing, parsed)
+                
+                save_db_trips(parsed)
+
+            elif file_path == USERS_FILE:
+                existing = get_db_users()
+                if existing is None and os.path.exists(file_path):
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            existing = json.load(f)
+                    except Exception:
+                        pass
+                if isinstance(existing, list) and isinstance(parsed, list):
+                    parsed = merge_users_data(existing, parsed)
+
+                save_db_users(parsed)
 
             with open(file_path, 'w', encoding='utf-8') as f:
                 json.dump(parsed, f, ensure_ascii=False, indent=2)
             
             target_name = os.path.basename(file_path)
             item_count = len(parsed) if isinstance(parsed, list) else 1
-            print(f"✅ [DATA SYNC] Đã lưu thành công {item_count} mục vào {target_name}")
+            print(f"✅ [DATA SYNC] Đã lưu thành công {item_count} mục vào {target_name} và Database!")
 
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
@@ -239,6 +452,7 @@ def merge_users_data(existing_users, incoming_users):
 
 def main():
     os.chdir(BASE_DIR)
+    init_database()
     local_ip = get_local_ip()
     url = f"http://{local_ip}:{PORT}"
     localhost_url = f"http://localhost:{PORT}"

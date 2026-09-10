@@ -1,2 +1,3 @@
 # TripSplit Python Requirements
-# server.py uses Python standard library only (http.server, socketserver, socket, sys, os, json)
+# Database Adapter for Supabase / PostgreSQL cloud persistence
+psycopg2-binary>=2.9.9
