@@ -5,6 +5,7 @@ import sys
 import os
 import json
 import urllib.parse
+import re
 
 try:
     import psycopg2
@@ -20,9 +21,18 @@ USERS_FILE = os.path.join(DATA_DIR, 'users.json')
 TRIPS_FILE = os.path.join(DATA_DIR, 'trips.json')
 
 _db_conn = None
+_db_last_error = None
+
+def try_connect_pg(url):
+    clean_url = url.strip()
+    if clean_url.startswith('postgres://'):
+        clean_url = 'postgresql://' + clean_url[len('postgres://'):]
+    conn = psycopg2.connect(clean_url, connect_timeout=10, sslmode='require')
+    conn.autocommit = True
+    return conn
 
 def get_db_connection():
-    global _db_conn
+    global _db_conn, _db_last_error
     db_url = os.environ.get('DATABASE_URL') or os.environ.get('SUPABASE_DB_URL')
     if not db_url or not HAS_POSTGRES:
         return None
@@ -35,22 +45,37 @@ def get_db_connection():
     except Exception:
         _db_conn = None
 
-    try:
-        clean_url = db_url.strip()
-        if clean_url.startswith('postgres://'):
-            clean_url = 'postgresql://' + clean_url[len('postgres://'):]
-        _db_conn = psycopg2.connect(clean_url, connect_timeout=10)
-        _db_conn.autocommit = True
-        return _db_conn
-    except Exception as ex:
-        print(f"⚠️ [DATABASE] Lỗi kết nối PostgreSQL/Supabase: {ex}")
-        _db_conn = None
-        return None
+    urls_to_try = [db_url]
+
+    # Supabase Direct URL (db.[ref].supabase.co) chỉ hỗ trợ IPv6.
+    # Nếu máy chủ Render dùng IPv4, tự động chuyển đổi sang Supabase Connection Pooler (hỗ trợ IPv4)
+    m = re.search(r'postgres(?:ql)?://([^:]+):([^@]+)@db\.([a-zA-Z0-9]+)\.supabase\.co(?::\d+)?/(.+)', db_url)
+    if m:
+        user, pwd, ref, db = m.groups()
+        pooler_user = f'postgres.{ref}' if not user.startswith('postgres.') else user
+        pooler_6543 = f'postgresql://{pooler_user}:{pwd}@aws-0-ap-southeast-1.pooler.supabase.com:6543/{db}'
+        pooler_5432 = f'postgresql://{pooler_user}:{pwd}@aws-0-ap-southeast-1.pooler.supabase.com:5432/{db}'
+        # Thử kết nối qua Pooler trước
+        urls_to_try = [pooler_6543, pooler_5432, db_url]
+
+    last_ex = None
+    for candidate_url in urls_to_try:
+        try:
+            _db_conn = try_connect_pg(candidate_url)
+            _db_last_error = None
+            return _db_conn
+        except Exception as ex:
+            last_ex = ex
+
+    _db_last_error = str(last_ex)
+    print(f"⚠️ [DATABASE] Lỗi kết nối PostgreSQL/Supabase: {_db_last_error}")
+    _db_conn = None
+    return None
 
 def init_database():
     conn = get_db_connection()
     if not conn:
-        print("ℹ️ [DATABASE] Không có DATABASE_URL hoặc chưa có kết nối. Hệ thống dùng tệp JSON cục bộ.")
+        print(f"ℹ️ [DATABASE] Chưa kết nối được DB ({_db_last_error}). Hệ thống dùng tệp JSON cục bộ.")
         return
     try:
         with conn.cursor() as cur:
@@ -69,8 +94,8 @@ def init_database():
                 );
             """)
 
-            cur.execute("SELECT COUNT(*) FROM users;")
-            if cur.fetchone()[0] == 0 and os.path.exists(USERS_FILE):
+            # Tự động đồng bộ toàn bộ tài khoản từ users.json vào Supabase
+            if os.path.exists(USERS_FILE):
                 try:
                     with open(USERS_FILE, 'r', encoding='utf-8') as f:
                         init_users = json.load(f)
@@ -78,17 +103,19 @@ def init_database():
                         for u in init_users:
                             uid = u.get('id')
                             uname = u.get('username')
-                            if uid:
-                                cur.execute(
-                                    "INSERT INTO users (id, username, data) VALUES (%s, %s, %s) ON CONFLICT (id) DO NOTHING;",
-                                    (uid, uname, Json(u))
-                                )
-                        print(f"🌱 [DATABASE SEED] Đã chuyển thành công {len(init_users)} tài khoản ban đầu vào Supabase!")
+                            if uid and u.get('status') != 'deleted':
+                                cur.execute("""
+                                    INSERT INTO users (id, username, data, updated_at)
+                                    VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                                    ON CONFLICT (id) DO UPDATE
+                                    SET data = EXCLUDED.data, username = EXCLUDED.username, updated_at = CURRENT_TIMESTAMP;
+                                """, (uid, uname, Json(u)))
+                        print(f"🌱 [DATABASE SEED] Đã đồng bộ thành công {len(init_users)} tài khoản vào Supabase!")
                 except Exception as ex:
                     print(f"⚠️ [DATABASE SEED] Lỗi import users: {ex}")
 
-            cur.execute("SELECT COUNT(*) FROM trips;")
-            if cur.fetchone()[0] == 0 and os.path.exists(TRIPS_FILE):
+            # Tự động đồng bộ toàn bộ chuyến đi từ trips.json vào Supabase
+            if os.path.exists(TRIPS_FILE):
                 try:
                     with open(TRIPS_FILE, 'r', encoding='utf-8') as f:
                         init_trips = json.load(f)
@@ -96,12 +123,14 @@ def init_database():
                         for t in init_trips:
                             code = t.get('code')
                             name = t.get('name')
-                            if code:
-                                cur.execute(
-                                    "INSERT INTO trips (code, name, data) VALUES (%s, %s, %s) ON CONFLICT (code) DO NOTHING;",
-                                    (code, name, Json(t))
-                                )
-                        print(f"🌱 [DATABASE SEED] Đã chuyển thành công {len(init_trips)} chuyến đi ban đầu vào Supabase!")
+                            if code and t.get('status') != 'deleted':
+                                cur.execute("""
+                                    INSERT INTO trips (code, name, data, updated_at)
+                                    VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                                    ON CONFLICT (code) DO UPDATE
+                                    SET data = EXCLUDED.data, name = EXCLUDED.name, updated_at = CURRENT_TIMESTAMP;
+                                """, (code, name, Json(t)))
+                        print(f"🌱 [DATABASE SEED] Đã đồng bộ thành công {len(init_trips)} chuyến đi vào Supabase!")
                 except Exception as ex:
                     print(f"⚠️ [DATABASE SEED] Lỗi import trips: {ex}")
 
@@ -223,11 +252,14 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.end_headers()
+            conn = get_db_connection()
+            has_db_config = bool(os.environ.get('DATABASE_URL') or os.environ.get('SUPABASE_DB_URL'))
             info = {
                 "localIp": get_local_ip(),
                 "port": PORT,
                 "environment": "cloud" if os.environ.get('PORT') else "local",
-                "database": "supabase" if (os.environ.get('DATABASE_URL') or os.environ.get('SUPABASE_DB_URL')) else "local_json"
+                "database": "connected" if conn is not None else ("error" if has_db_config else "local_json"),
+                "dbError": _db_last_error if not conn and has_db_config else None
             }
             self.wfile.write(json.dumps(info).encode('utf-8'))
             return
