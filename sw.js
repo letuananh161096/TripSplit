@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tripsplit-v1.7.2';
+const CACHE_NAME = 'tripsplit-v2.0.0-tropical';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

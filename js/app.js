@@ -4383,7 +4383,7 @@
   function setupPwaServiceWorker() {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.5.1')
+        navigator.serviceWorker.register('./sw.js?v=2.0.0-tropical')
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update();

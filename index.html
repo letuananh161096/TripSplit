@@ -8,7 +8,7 @@
   <title>TripSplit - Sổ Chi Tiêu Du Lịch Nhóm & Quyết Toán VietQR</title>
   <meta name="description"
     content="Ứng dụng quản lý chi tiêu khi team đi du lịch, tối ưu nợ và chuyển khoản nhanh qua mã VietQR trên Android và iOS.">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0b111e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="TripSplit">
@@ -26,7 +26,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
 
-  <link rel="stylesheet" href="css/styles.css?v=1.7.2">
+  <link rel="stylesheet" href="css/styles.css?v=2.0.0-tropical">
 </head>
 
 <body>
@@ -191,140 +191,147 @@
 
       <!-- ================= TAB 1: TỔNG QUAN (OVERVIEW) ================= -->
       <section class="tab-view active" id="tab-overview">
-        <!-- Hero Stats Card -->
-        <div class="hero-card">
-          <div class="hero-header">
-            <div class="hero-trip-name" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <span id="hero-display-name">Du Lịch Đà Lạt</span>
-              <button class="icon-btn" id="btn-edit-trip-name" title="Đổi tên chuyến đi này"
-                style="width: 26px; height: 26px; border: none; background: rgba(255,255,255,0.08); padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                  <path d="M12 20h9" />
-                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                </svg>
-              </button>
-              <span class="room-chip" id="btn-copy-code" title="Bấm để sao chép mã phòng">#<span
-                  id="hero-room-code">DALAT26</span></span>
-            </div>
-            <button class="trip-badge-btn" id="btn-export-quick">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Xuất
-            </button>
-          </div>
+        <div class="overview-grid-layout">
+          <!-- Primary Column: Hero Boarding Pass, Group Fund & Quick Shortcuts -->
+          <div class="overview-col-primary">
+            <!-- Hero Stats Card -->
+            <div class="hero-card">
+              <div class="hero-header">
+                <div class="hero-trip-name" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <span id="hero-display-name">Du Lịch Đà Lạt</span>
+                  <button class="icon-btn" id="btn-edit-trip-name" title="Đổi tên chuyến đi này"
+                    style="width: 26px; height: 26px; border: none; background: rgba(255,255,255,0.08); padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                    </svg>
+                  </button>
+                  <span class="room-chip" id="btn-copy-code" title="Bấm để sao chép mã phòng">#<span
+                      id="hero-room-code">DALAT26</span></span>
+                </div>
+                <button class="trip-badge-btn" id="btn-export-quick">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Xuất
+                </button>
+              </div>
 
-          <div class="hero-total-label">Tổng chi phí cả team</div>
-          <div class="hero-total-amount">
-            <span id="hero-total-val">0</span>
-            <span class="currency">VND</span>
-          </div>
+              <div class="hero-total-label">Tổng chi phí cả team</div>
+              <div class="hero-total-amount">
+                <span id="hero-total-val">0</span>
+                <span class="currency">VND</span>
+              </div>
 
-          <div class="hero-grid">
-            <div class="hero-sub-metric">
-              <span class="label">Bình quân / người</span>
-              <span class="val highlight-green" id="hero-avg-val">0 đ</span>
-            </div>
-            <div class="hero-sub-metric">
-              <span class="label">Số khoản đã chi</span>
-              <span class="val highlight-blue" id="hero-count-val">0 khoản</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Group Fund (Quỹ Nhóm & Thủ Quỹ) Widget Card -->
-        <div class="fund-card" id="fund-card">
-          <div class="fund-header">
-            <div class="fund-title-area">
-              <span class="fund-badge-icon">🏦</span>
-              <div>
-                <div class="fund-title">Quỹ Nhóm (Thủ Quỹ)</div>
-                <div class="fund-subtitle">
-                  Thủ quỹ: <strong id="fund-treasurer-name">--</strong>
+              <div class="hero-grid">
+                <div class="hero-sub-metric">
+                  <span class="label">Bình quân / người</span>
+                  <span class="val highlight-green" id="hero-avg-val">0 đ</span>
+                </div>
+                <div class="hero-sub-metric">
+                  <span class="label">Số khoản đã chi</span>
+                  <span class="val highlight-blue" id="hero-count-val">0 khoản</span>
                 </div>
               </div>
             </div>
-            <button class="trip-badge-btn" id="btn-open-fund-modal"
-              style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.35);">
-              💰 Góp quỹ
-            </button>
-          </div>
 
-          <div class="fund-balance-row">
-            <div class="fund-balance-info">
-              <div class="fund-label">Số dư quỹ còn lại</div>
-              <div class="fund-amount" id="fund-remaining-amount">0 đ</div>
+            <!-- Group Fund (Quỹ Nhóm & Thủ Quỹ) Widget Card -->
+            <div class="fund-card" id="fund-card">
+              <div class="fund-header">
+                <div class="fund-title-area">
+                  <span class="fund-badge-icon">🏦</span>
+                  <div>
+                    <div class="fund-title">Quỹ Nhóm (Thủ Quỹ)</div>
+                    <div class="fund-subtitle">
+                      Thủ quỹ: <strong id="fund-treasurer-name">--</strong>
+                    </div>
+                  </div>
+                </div>
+                <button class="trip-badge-btn" id="btn-open-fund-modal"
+                  style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.35);">
+                  💰 Góp quỹ
+                </button>
+              </div>
+
+              <div class="fund-balance-row">
+                <div class="fund-balance-info">
+                  <div class="fund-label">Số dư quỹ còn lại</div>
+                  <div class="fund-amount" id="fund-remaining-amount">0 đ</div>
+                </div>
+                <div class="fund-status-chip" id="fund-status-chip">Đang dùng quỹ</div>
+              </div>
+
+              <div class="fund-progress-track">
+                <div class="fund-progress-bar" id="fund-progress-bar" style="width: 100%;"></div>
+              </div>
+
+              <div class="fund-stats-footer">
+                <span>Đã gom quỹ: <strong id="fund-total-collected">0 đ</strong></span>
+                <span>Đã chi từ quỹ: <strong id="fund-total-spent">0 đ</strong></span>
+              </div>
             </div>
-            <div class="fund-status-chip" id="fund-status-chip">Đang dùng quỹ</div>
-          </div>
 
-          <div class="fund-progress-track">
-            <div class="fund-progress-bar" id="fund-progress-bar" style="width: 100%;"></div>
-          </div>
+            <!-- Quick Action Shortcuts (Phím tắt nhanh Fintech) -->
+            <div class="quick-shortcuts-card">
+              <button type="button" class="quick-shortcut-btn" id="btn-quick-add-expense">
+                <div class="shortcut-icon-box emerald">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </div>
+                <span class="shortcut-title">Thêm chi</span>
+              </button>
 
-          <div class="fund-stats-footer">
-            <span>Đã gom quỹ: <strong id="fund-total-collected">0 đ</strong></span>
-            <span>Đã chi từ quỹ: <strong id="fund-total-spent">0 đ</strong></span>
-          </div>
-        </div>
+              <button type="button" class="quick-shortcut-btn" id="btn-quick-fund">
+                <div class="shortcut-icon-box amber">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <rect width="20" height="12" x="2" y="6" rx="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <path d="M6 12h.01M18 12h.01" />
+                  </svg>
+                </div>
+                <span class="shortcut-title" id="quick-fund-label">Quỹ nhóm</span>
+              </button>
 
-        <!-- Quick Action Shortcuts (Phím tắt nhanh Fintech) -->
-        <div class="quick-shortcuts-card">
-          <button type="button" class="quick-shortcut-btn" id="btn-quick-add-expense">
-            <div class="shortcut-icon-box emerald">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
+              <button type="button" class="quick-shortcut-btn" id="btn-quick-settle">
+                <div class="shortcut-icon-box purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <rect width="20" height="14" x="2" y="5" rx="2" />
+                    <line x1="2" x2="22" y1="10" y2="10" />
+                  </svg>
+                </div>
+                <span class="shortcut-title">Quyết toán</span>
+              </button>
             </div>
-            <span class="shortcut-title">Thêm chi</span>
-          </button>
-
-          <button type="button" class="quick-shortcut-btn" id="btn-quick-fund">
-            <div class="shortcut-icon-box amber">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                <rect width="20" height="12" x="2" y="6" rx="2" />
-                <circle cx="12" cy="12" r="2" />
-                <path d="M6 12h.01M18 12h.01" />
-              </svg>
-            </div>
-            <span class="shortcut-title" id="quick-fund-label">Quỹ nhóm</span>
-          </button>
-
-          <button type="button" class="quick-shortcut-btn" id="btn-quick-settle">
-            <div class="shortcut-icon-box purple">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                <rect width="20" height="14" x="2" y="5" rx="2" />
-                <line x1="2" x2="22" y1="10" y2="10" />
-              </svg>
-            </div>
-            <span class="shortcut-title">Quyết toán</span>
-          </button>
-        </div>
-
-        <!-- Recent Expenses Card (Chi tiêu gần đây) -->
-        <div class="recent-expenses-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div
-              style="font-weight: 700; color: #fff; font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">
-              <span>⏱️ Chi tiêu gần đây</span>
-            </div>
-            <button id="btn-see-all-expenses"
-              style="background: none; border: none; color: #38bdf8; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
-              Xem tất cả ➔
-            </button>
           </div>
 
-          <div id="recent-expenses-preview" style="display: flex; flex-direction: column; gap: 8px;">
-            <!-- Rendered via JS -->
-          </div>
+          <!-- Secondary Column: Recent Expenses (Chi tiêu gần đây) -->
+          <div class="overview-col-secondary">
+            <div class="recent-expenses-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div
+                  style="font-weight: 700; color: #fff; font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">
+                  <span>⏱️ Chi tiêu gần đây</span>
+                </div>
+                <button id="btn-see-all-expenses"
+                  style="background: none; border: none; color: #14b8a6; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+                  Xem tất cả ➔
+                </button>
+              </div>
 
-          <button class="submit-btn" id="btn-goto-expenses-tab"
-            style="margin-top: 14px; padding: 10px; font-size: 0.85rem; background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: none;">
-            🧾 Mở Toàn Bộ Danh Sách Chi Tiêu ➔
-          </button>
+              <div id="recent-expenses-preview" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Rendered via JS -->
+              </div>
+
+              <button class="submit-btn" id="btn-goto-expenses-tab"
+                style="margin-top: 14px; padding: 10px; font-size: 0.85rem; background: rgba(20, 184, 166, 0.12); color: #2dd4bf; border: 1px solid rgba(20, 184, 166, 0.3); box-shadow: none;">
+                🧾 Mở Toàn Bộ Danh Sách Chi Tiêu ➔
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1537,22 +1544,22 @@
   <div id="qr-reader-hidden-view" style="width: 1px; height: 1px; opacity: 0; position: absolute; pointer-events: none;"></div>
 
   <!-- JavaScript Modules with Cache-Busting -->
-  <script src="js/banks.js?v=1.7.2"></script>
-  <script src="js/vietqr.js?v=1.7.2"></script>
-  <script src="js/debt.js?v=1.7.2"></script>
-  <script src="js/export.js?v=1.7.2"></script>
-  <script src="js/realtime.js?v=1.7.2"></script>
-  <script src="js/auth.js?v=1.7.2"></script>
-  <script src="js/jsqr.min.js?v=1.7.2"></script>
-  <script src="js/html5-qrcode.min.js?v=1.7.2"></script>
-  <script src="js/app.js?v=1.7.2"></script>
+  <script src="js/banks.js?v=2.0.0"></script>
+  <script src="js/vietqr.js?v=2.0.0"></script>
+  <script src="js/debt.js?v=2.0.0"></script>
+  <script src="js/export.js?v=2.0.0"></script>
+  <script src="js/realtime.js?v=2.0.0"></script>
+  <script src="js/auth.js?v=2.0.0"></script>
+  <script src="js/jsqr.min.js?v=2.0.0"></script>
+  <script src="js/html5-qrcode.min.js?v=2.0.0"></script>
+  <script src="js/app.js?v=2.0.0"></script>
 
   <script>
-    // Tự động xóa cache cũ của Service Worker để luôn nhận code mới
+    // Tự động xóa sạch toàn bộ cache cũ của Service Worker để nhận giao diện mới 100%
     if ('caches' in window) {
       caches.keys().then(function (names) {
         names.forEach(function (name) {
-          if (name !== 'tripsplit-v1.7.2') {
+          if (name !== 'tripsplit-v2.0.0-tropical') {
             console.log('Purging old cache:', name);
             caches.delete(name);
           }
